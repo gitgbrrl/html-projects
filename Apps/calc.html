@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Calculadora Universal</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --calc-bg: rgba(30, 41, 59, 0.7);
+            --text-color: #f8fafc;
+            --btn-bg: rgba(255, 255, 255, 0.1);
+            --btn-radius: 18px;
+            --accent: #38bdf8;
+            --font-main: 'Segoe UI', sans-serif;
+            --display-bg: transparent;
+            --display-text: var(--text-color);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --calc-bg: rgba(255, 255, 255, 0.8);
+            --text-color: #1e293b;
+            --btn-bg: rgba(0, 0, 0, 0.05);
+            --accent: #2563eb;
+        }
+
+        [data-theme="win7"] {
+            --bg-color: #3b5998;
+            --calc-bg: linear-gradient(180deg, rgba(200, 220, 240, 0.85) 0%, rgba(150, 180, 210, 0.95) 100%);
+            --text-color: #000000;
+            --btn-bg: linear-gradient(180deg, #ffffff 0%, #e0e0e0 50%, #c0c0c0 100%);
+            --btn-radius: 4px;
+            --accent: #3b82f6;
+            --display-bg: #ffffff;
+            --display-text: #000000;
+        }
+
+        * { box-sizing: border-box; font-family: var(--font-main); transition: all 0.2s ease; }
+
+        body {
+            margin: 0; padding: 0; background-color: var(--bg-color);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100dvh; overflow: hidden;
+        }
+
+        .theme-selector { margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; z-index: 10; }
+        .theme-btn {
+            padding: 8px 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+            cursor: pointer; background: rgba(255,255,255,0.1); color: var(--text-color); font-size: 11px;
+        }
+
+        .calculator {
+            width: 92%; max-width: 340px; background: var(--calc-bg);
+            backdrop-filter: blur(15px); padding: 20px; border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        [data-theme="win7"] .calculator {
+            border: 2px solid #70a0d0; border-radius: 8px;
+            box-shadow: inset 0 0 5px white, 5px 5px 15px rgba(0,0,0,0.5);
+        }
+
+        #display {
+            width: 100%; height: 70px; background: var(--display-bg); border: none;
+            text-align: right; font-size: 32px; color: var(--display-text); margin-bottom: 20px;
+            padding: 15px; border-radius: 12px; outline: none;
+        }
+
+        [data-theme="win7"] #display {
+            border: 1px solid #707070; border-radius: 2px;
+            box-shadow: inset 0 2px 2px rgba(0,0,0,0.2);
+        }
+
+        .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+
+        button {
+            height: 55px; border: 1px solid rgba(0,0,0,0.05); border-radius: var(--btn-radius);
+            font-size: 20px; font-weight: 600; cursor: pointer;
+            background: var(--btn-bg); color: var(--text-color);
+        }
+
+        [data-theme="win7"] button {
+            height: 45px; border: 1px solid #707070; font-size: 16px;
+            box-shadow: inset 0 1px 0 white;
+        }
+
+        button:active { filter: brightness(0.8); transform: scale(0.95); }
+        .equals { background: var(--accent) !important; color: white !important; grid-column: span 2; }
+        .clear { color: #ef4444; }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <div class="theme-selector">
+        <button class="theme-btn" onclick="setTheme('dark')">Dark Moderno</button>
+        <button class="theme-btn" onclick="setTheme('light')">Light Moderno</button>
+        <button class="theme-btn" onclick="setTheme('win7')">Estilo Windows 7</button>
+    </div>
+
+    <div class="calculator">
+        <input type="text" id="display" readonly placeholder="0">
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button onclick="deleteLast()">←</button>
+            <button onclick="appendToDisplay('/')">/</button>
+            <button onclick="appendToDisplay('*')">*</button>
+            
+            <button onclick="appendToDisplay('7')">7</button>
+            <button onclick="appendToDisplay('8')">8</button>
+            <button onclick="appendToDisplay('9')">9</button>
+            <button onclick="appendToDisplay('-')">-</button>
+            
+            <button onclick="appendToDisplay('4')">4</button>
+            <button onclick="appendToDisplay('5')">5</button>
+            <button onclick="appendToDisplay('6')">6</button>
+            <button onclick="appendToDisplay('+')">+</button>
+            
+            <button onclick="appendToDisplay('1')">1</button>
+            <button onclick="appendToDisplay('2')">2</button>
+            <button onclick="appendToDisplay('3')">3</button>
+            <button onclick="appendToDisplay('.')">.</button>
+            
+            <button onclick="appendToDisplay('0')">0</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+<script>
+    const display = document.getElementById('display');
+
+    function appendToDisplay(input) {
+        if (display.value === 'Erro') display.value = '';
+        display.value += input;
+    }
+
+    function clearDisplay() { display.value = ''; }
+    function deleteLast() { display.value = display.value.slice(0, -1); }
+
+    function calculate() {
+        try {
+            // Substitui vírgula por ponto se necessário e calcula
+            let result = eval(display.value);
+            display.value = Number.isInteger(result) ? result : result.toFixed(4);
+        } catch {
+            display.value = 'Erro';
+        }
+    }
+
+    function setTheme(theme) {
+        document.body.setAttribute('data-theme', theme);
+        // Ajusta o arredondamento dos botões dinamicamente
+        if (theme === 'win7') {
+            document.documentElement.style.setProperty('--btn-radius', '4px');
+        } else {
+            document.documentElement.style.setProperty('--btn-radius', '18px');
+        }
+    }
+
+    // Suporte ao Teclado Físico
+    document.addEventListener('keydown', (event) => {
+        const key = event.key;
+        if (!isNaN(key) || ['+', '-', '*', '/', '.', ','].includes(key)) {
+            appendToDisplay(key === ',' ? '.' : key);
+        }
+        if (key === 'Enter' || key === '=') {
+            event.preventDefault();
+            calculate();
+        }
+        if (key === 'Backspace') deleteLast();
+        if (key === 'Escape' || key === 'c' || key === 'C') clearDisplay();
+    });
+</script>
+</body>
+</html>
