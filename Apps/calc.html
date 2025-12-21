@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Calculadora Universal</title>
+    <title>Calculadora</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -139,7 +139,6 @@
 
     function calculate() {
         try {
-            // Substitui vírgula por ponto se necessário e calcula
             let result = eval(display.value);
             display.value = Number.isInteger(result) ? result : result.toFixed(4);
         } catch {
@@ -149,7 +148,6 @@
 
     function setTheme(theme) {
         document.body.setAttribute('data-theme', theme);
-        // Ajusta o arredondamento dos botões dinamicamente
         if (theme === 'win7') {
             document.documentElement.style.setProperty('--btn-radius', '4px');
         } else {
@@ -157,7 +155,6 @@
         }
     }
 
-    // Suporte ao Teclado Físico
     document.addEventListener('keydown', (event) => {
         const key = event.key;
         if (!isNaN(key) || ['+', '-', '*', '/', '.', ','].includes(key)) {
