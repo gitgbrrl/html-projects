@@ -279,7 +279,6 @@
             const dy = this.isDucking ? ch - groundYOffset - 50 : this.y;
             const dh = this.isDucking ? 50 : 90;
 
-            // Animação das pernas mais suave (divisor aumentado para 10)
             if (this.grounded && gameActive && !isPaused) {
                 this.legPhase = Math.floor(frame / 10) % 2;
             } else if (!this.grounded) {
@@ -291,7 +290,6 @@
             ctx.shadowBlur = 10;
             ctx.shadowColor = '#00d2ff';
             
-            // Rabo
             if (!this.isDucking) {
                 ctx.fillRect(this.x - 5, dy + dh - 40, 20, 12);
                 ctx.save();
@@ -303,21 +301,16 @@
                 ctx.fillRect(this.x - 20, dy + dh - 20, 35, 12);
             }
 
-            // Corpo
             ctx.fillRect(this.x + 10, dy + 20, 40, dh - 30);
             
-            // Pernas Animadas
             const legH = 12;
             const legW = 12;
-            // Perna 1
             const p1Offset = (this.legPhase === 0) ? 0 : -legH;
             ctx.fillRect(this.x + 15, dy + dh - 10 + p1Offset, legW, legH);
             
-            // Perna 2
             const p2Offset = (this.legPhase === 1) ? 0 : -legH;
             ctx.fillRect(this.x + 35, dy + dh - 10 + p2Offset, legW, legH);
 
-            // Cabeça
             if (!this.isDucking) {
                 ctx.fillRect(this.x + 30, dy - 20, 55, 45);
                 ctx.fillStyle = '#05050a';
@@ -500,7 +493,7 @@
         gameActive = false;
         playTone(150, 0.5, 'sawtooth');
         statusTitle.textContent = 'VOCÊ PERDEU';
-        startBtn.textContent = 'JOGAR NOVAMENTE'; // Alterado conforme solicitado
+        startBtn.textContent = 'JOGAR NOVAMENTE';
         overlayMain.style.display = 'flex';
         cancelAnimationFrame(animationId);
     }
