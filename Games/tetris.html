@@ -125,7 +125,6 @@
     </div>
 
 <script>
-// --- Audio VFX ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playLineSound() {
     const oscillator = audioCtx.createOscillator();
@@ -323,7 +322,6 @@ function arenaSweep() {
         score += lines * 100 * lines; 
         scoreElement.innerText = score;
         
-        // Ativa VFX nos Pontos
         scoreElement.classList.add('score-vfx');
         scoreBox.classList.add('box-vfx');
         setTimeout(() => {
@@ -331,7 +329,6 @@ function arenaSweep() {
             scoreBox.classList.remove('box-vfx');
         }, 300);
 
-        // Som de linha
         playLineSound();
     }
 }
