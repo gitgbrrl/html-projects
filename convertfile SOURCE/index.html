@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversor de Arquivos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --surface: #18181c;
+      --surface-hover: #222228;
+      --border: #2a2a32;
+      --text: #e8e8ed;
+      --text-muted: #8888a0;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --success: #22c55e;
+      --error: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Área principal (centro) */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem;
+      min-width: 0;
+      overflow-y: auto;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      background: var(--surface);
+      padding: 0.5rem;
+      border-radius: 12px;
+    }
+
+    .tab {
+      padding: 0.65rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-family: inherit;
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: var(--text);
+      background: var(--surface-hover);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* Painel de conteúdo */
+    .content-panel {
+      width: 100%;
+      max-width: 600px;
+      display: none;
+    }
+
+    .content-panel.active {
+      display: block;
+    }
+
+    .drop-zone {
+      width: 100%;
+      min-height: 280px;
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--surface);
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.06);
+    }
+
+    .drop-zone.has-file {
+      border-style: solid;
+      border-color: var(--accent);
+    }
+
+    .drop-zone .icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+    }
+
+    .drop-zone .hint {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      text-align: center;
+      padding: 0 1rem;
+    }
+
+    .drop-zone .file-name {
+      font-weight: 600;
+      color: var(--accent);
+      word-break: break-all;
+      text-align: center;
+      padding: 0 1rem;
+    }
+
+    .drop-zone .file-ext {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* Input de URL */
+    .url-input-group {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .url-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .url-input {
+      width: 100%;
+      min-height: 48px;
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.2s;
+    }
+
+    .url-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .url-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Opções do YouTube */
+    .youtube-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .option-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .option-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .option-btn {
+      padding: 0.65rem 1rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .option-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+    }
+
+    .option-btn.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .convert-btn {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 0.85rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: white;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .convert-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .convert-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .message.success {
+      display: block;
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+    }
+
+    .message.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--error);
+    }
+
+    /* Sidebar direita */
+    .sidebar {
+      width: 320px;
+      min-width: 280px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .sidebar-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .format-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+
+    .format-btn {
+      padding: 0.65rem 0.85rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .format-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+    }
+
+    .format-btn.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .sidebar-placeholder {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      padding: 1rem 0;
+    }
+
+    .current-format {
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .current-format strong {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <main class="main">
+    <div class="logo">Conversor</div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="upload">📁 Upload</button>
+      <button class="tab" data-tab="spotify">🎵 Spotify</button>
+      <button class="tab" data-tab="youtube">▶️ YouTube</button>
+    </div>
+
+    <!-- Painel Upload -->
+    <div class="content-panel active" id="panelUpload">
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept="image/*,audio/*,video/*">
+        <div class="icon">📁</div>
+        <span class="hint" id="hint">Arraste um arquivo ou clique para selecionar<br><small>Imagens, áudio ou vídeo</small></span>
+        <span class="file-name" id="fileName" style="display: none;"></span>
+        <span class="file-ext" id="fileExt" style="display: none;"></span>
+      </div>
+      <button type="button" class="convert-btn" id="convertBtn" disabled>Converter</button>
+    </div>
+
+    <!-- Painel Spotify -->
+    <div class="content-panel" id="panelSpotify">
+      <div class="url-input-group">
+        <input type="text" class="url-input" id="spotifyUrl" placeholder="Cole o link do Spotify (música ou playlist)">
+      </div>
+      <button type="button" class="convert-btn" id="spotifyBtn">Baixar em MP3</button>
+    </div>
+
+    <!-- Painel YouTube -->
+    <div class="content-panel" id="panelYoutube">
+      <div class="url-input-group">
+        <label class="url-label" for="youtubeUrl">Link do vídeo</label>
+        <input type="url" class="url-input" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/...">
+      </div>
+      <div class="youtube-options">
+        <div class="option-group">
+          <label>Formato</label>
+          <div class="option-buttons">
+            <button class="option-btn active" data-format="mp3">MP3 (Áudio)</button>
+            <button class="option-btn" data-format="mp4">MP4 (Vídeo)</button>
+          </div>
+        </div>
+        <div class="option-group">
+          <label>Qualidade</label>
+          <div class="option-buttons" id="qualityButtons">
+            <button class="option-btn active" data-quality="best">Melhor</button>
+            <button class="option-btn" data-quality="1080p">1080p</button>
+            <button class="option-btn" data-quality="720p">720p</button>
+            <button class="option-btn" data-quality="480p">480p</button>
+            <button class="option-btn" data-quality="360p">360p</button>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="convert-btn" id="youtubeBtn">Baixar</button>
+    </div>
+
+    <div class="message" id="message"></div>
+  </main>
+
+  <aside class="sidebar">
+    <h2>Formato atual</h2>
+    <div class="current-format" id="currentFormat">
+      Nenhum arquivo selecionado
+    </div>
+
+    <h2>Converter para</h2>
+    <div class="sidebar-section">
+      <div class="sidebar-placeholder" id="placeholderFormats">
+        Selecione um arquivo para ver as opções
+      </div>
+      <div class="format-grid" id="formatGrid" style="display: none;"></div>
+    </div>
+  </aside>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:5000';
+
+    // Elementos gerais
+    const message = document.getElementById('message');
+    const currentFormat = document.getElementById('currentFormat');
+    const placeholderFormats = document.getElementById('placeholderFormats');
+    const formatGrid = document.getElementById('formatGrid');
+
+    // Tabs
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.content-panel');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        const panelId = 'panel' + target.charAt(0).toUpperCase() + target.slice(1);
+        const panel = document.getElementById(panelId);
+        if (panel) panel.classList.add('active');
+        hideMessage();
+      });
+    });
+
+    // Upload de arquivo
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const hint = document.getElementById('hint');
+    const fileName = document.getElementById('fileName');
+    const fileExt = document.getElementById('fileExt');
+    const convertBtn = document.getElementById('convertBtn');
+
+    const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'tif'];
+    const AUDIO_EXTENSIONS = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'wma'];
+    const VIDEO_EXTENSIONS = ['mp4', 'avi', 'mov', 'mkv', 'webm', 'flv', 'wmv', 'm4v'];
+
+    const IMAGE_FORMATS = [
+      { ext: 'jpg', label: 'JPG' },
+      { ext: 'png', label: 'PNG' },
+      { ext: 'webp', label: 'WebP' },
+      { ext: 'gif', label: 'GIF' },
+      { ext: 'bmp', label: 'BMP' },
+      { ext: 'tiff', label: 'TIFF' }
+    ];
+
+    const AUDIO_FORMATS = [
+      { ext: 'mp3', label: 'MP3' },
+      { ext: 'wav', label: 'WAV' },
+      { ext: 'ogg', label: 'OGG' },
+      { ext: 'flac', label: 'FLAC' },
+      { ext: 'aac', label: 'AAC' },
+      { ext: 'm4a', label: 'M4A' }
+    ];
+
+    const VIDEO_FORMATS = [
+      { ext: 'mp4', label: 'MP4' },
+      { ext: 'avi', label: 'AVI' },
+      { ext: 'mov', label: 'MOV' },
+      { ext: 'webm', label: 'WebM' },
+      { ext: 'mkv', label: 'MKV' }
+    ];
+
+    let selectedFile = null;
+    let selectedTargetExt = null;
+
+    function getExtension(name) {
+      const i = name.lastIndexOf('.');
+      return i >= 0 ? name.slice(i + 1).toLowerCase() : '';
+    }
+
+    function showMessage(text, isError = false) {
+      message.textContent = text;
+      message.className = 'message ' + (isError ? 'error' : 'success');
+    }
+
+    function hideMessage() {
+      message.className = 'message';
+    }
+
+    function getFileType(ext) {
+      if (IMAGE_EXTENSIONS.includes(ext)) return 'image';
+      if (AUDIO_EXTENSIONS.includes(ext)) return 'audio';
+      if (VIDEO_EXTENSIONS.includes(ext)) return 'video';
+      return null;
+    }
+
+    function buildFormatOptions(sourceExt, fileType) {
+      if (fileType === 'image') return IMAGE_FORMATS.filter(f => f.ext !== sourceExt);
+      if (fileType === 'audio') return AUDIO_FORMATS.filter(f => f.ext !== sourceExt);
+      if (fileType === 'video') return VIDEO_FORMATS.filter(f => f.ext !== sourceExt);
+      return [];
+    }
+
+    function updateUIForFile(file) {
+      selectedFile = file;
+      const ext = getExtension(file.name);
+      const fileType = getFileType(ext);
+
+      fileName.textContent = file.name;
+      fileName.style.display = 'block';
+      fileExt.textContent = '.' + ext;
+      fileExt.style.display = 'block';
+      hint.style.display = 'none';
+      dropZone.classList.add('has-file');
+
+      currentFormat.innerHTML = `Tipo: <strong>${fileType || 'desconhecido'}</strong> | Extensão: <strong>.${ext}</strong>`;
+
+      if (fileType) {
+        const options = buildFormatOptions(ext, fileType);
+        if (options.length > 0) {
+          placeholderFormats.style.display = 'none';
+          formatGrid.style.display = 'grid';
+          formatGrid.innerHTML = '';
+
+          selectedTargetExt = options[0]?.ext || null;
+
+          options.forEach(f => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'format-btn' + (f.ext === selectedTargetExt ? ' active' : '');
+            btn.textContent = f.label;
+            btn.dataset.ext = f.ext;
+            btn.addEventListener('click', () => {
+              selectedTargetExt = f.ext;
+              formatGrid.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+            });
+            formatGrid.appendChild(btn);
+          });
+
+          convertBtn.disabled = false;
+        } else {
+          placeholderFormats.style.display = 'block';
+          placeholderFormats.textContent = 'Nenhuma opção de conversão disponível.';
+          formatGrid.style.display = 'none';
+          convertBtn.disabled = true;
+        }
+      } else {
+        placeholderFormats.style.display = 'block';
+        placeholderFormats.textContent = 'Formato não suportado.';
+        formatGrid.style.display = 'none';
+        convertBtn.disabled = true;
+        selectedTargetExt = null;
+      }
+    }
+
+    function clearFile() {
+      selectedFile = null;
+      selectedTargetExt = null;
+      fileInput.value = '';
+      fileName.style.display = 'none';
+      fileExt.style.display = 'none';
+      hint.style.display = 'block';
+      dropZone.classList.remove('has-file');
+      currentFormat.textContent = 'Nenhum arquivo selecionado';
+      placeholderFormats.style.display = 'block';
+      placeholderFormats.textContent = 'Selecione um arquivo para ver as opções';
+      formatGrid.style.display = 'none';
+      formatGrid.innerHTML = '';
+      convertBtn.disabled = true;
+      hideMessage();
+    }
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) updateUIForFile(file);
+    });
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) updateUIForFile(file);
+    });
+
+    convertBtn.addEventListener('click', async () => {
+      if (!selectedFile || !selectedTargetExt) return;
+      await convertFile(selectedFile, selectedTargetExt);
+    });
+
+    async function convertFile(file, toFormat) {
+      hideMessage();
+      convertBtn.disabled = true;
+      convertBtn.textContent = 'Convertendo...';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('to_format', toFormat);
+
+      try {
+        const res = await fetch(API_BASE + '/api/convert', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          showMessage(data.error || 'Erro ao converter', true);
+          return;
+        }
+
+        const blob = await res.blob();
+        const disp = res.headers.get('Content-Disposition');
+        const match = disp && disp.match(/filename="?([^";]+)"?/);
+        const name = match ? match[1] : ('converted.' + toFormat);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = name;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        showMessage('Arquivo convertido e download iniciado!');
+      } catch (err) {
+        showMessage('Erro de conexão. Verifique se o servidor está rodando.', true);
+      } finally {
+        convertBtn.disabled = false;
+        convertBtn.textContent = 'Converter';
+      }
+    }
+
+    // Spotify
+    const spotifyUrl = document.getElementById('spotifyUrl');
+    const spotifyBtn = document.getElementById('spotifyBtn');
+
+    spotifyBtn.addEventListener('click', async () => {
+      const url = spotifyUrl.value.trim();
+      if (!url) {
+        showMessage('Cole um link do Spotify', true);
+        return;
+      }
+      if (!url.includes('spotify.com')) {
+        showMessage('Link inválido do Spotify', true);
+        return;
+      }
+
+      hideMessage();
+      spotifyBtn.disabled = true;
+      spotifyBtn.textContent = 'Baixando...';
+
+      try {
+        const res = await fetch(API_BASE + '/api/spotify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          showMessage(data.error || 'Erro ao baixar', true);
+          return;
+        }
+
+        const blob = await res.blob();
+        const disp = res.headers.get('Content-Disposition');
+        const match = disp && disp.match(/filename="?([^";]+)"?/);
+        const name = match ? match[1] : 'spotify_download.mp3';
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = name;
+        link.click();
+        URL.revokeObjectURL(downloadUrl);
+
+        showMessage('Download iniciado!');
+      } catch (err) {
+        showMessage('Erro de conexão. Verifique se o servidor está rodando.', true);
+      } finally {
+        spotifyBtn.disabled = false;
+        spotifyBtn.textContent = 'Baixar em MP3';
+      }
+    });
+
+    // YouTube
+    const youtubeUrl = document.getElementById('youtubeUrl');
+    const youtubeBtn = document.getElementById('youtubeBtn');
+    let youtubeFormat = 'mp3';
+    let youtubeQuality = 'best';
+
+    document.querySelectorAll('[data-format]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-format]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        youtubeFormat = btn.dataset.format;
+        updateQualityButtons();
+      });
+    });
+
+    function updateQualityButtons() {
+      const qualityBtns = document.querySelectorAll('[data-quality]');
+      if (youtubeFormat === 'mp3') {
+        qualityBtns.forEach(b => {
+          if (b.dataset.quality === 'best') {
+            b.style.display = 'block';
+            b.classList.add('active');
+          } else {
+            b.style.display = 'none';
+            b.classList.remove('active');
+          }
+        });
+        youtubeQuality = 'best';
+      } else {
+        qualityBtns.forEach(b => b.style.display = 'block');
+      }
+    }
+
+    document.querySelectorAll('[data-quality]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (youtubeFormat === 'mp3') return;
+        document.querySelectorAll('[data-quality]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        youtubeQuality = btn.dataset.quality;
+      });
+    });
+
+    youtubeBtn.addEventListener('click', async () => {
+      const url = youtubeUrl.value.trim();
+      if (!url) {
+        showMessage('Cole um link do YouTube', true);
+        return;
+      }
+      if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+        showMessage('Link inválido do YouTube', true);
+        return;
+      }
+
+      hideMessage();
+      youtubeBtn.disabled = true;
+      youtubeBtn.textContent = 'Baixando...';
+
+      try {
+        const res = await fetch(API_BASE + '/api/youtube', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, format: youtubeFormat, quality: youtubeQuality })
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          showMessage(data.error || 'Erro ao baixar', true);
+          return;
+        }
+
+        const blob = await res.blob();
+        const disp = res.headers.get('Content-Disposition');
+        const match = disp && disp.match(/filename="?([^";]+)"?/);
+        const name = match ? match[1] : (`youtube_download.${youtubeFormat}`);
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = name;
+        link.click();
+        URL.revokeObjectURL(downloadUrl);
+
+        showMessage('Download iniciado!');
+      } catch (err) {
+        showMessage('Erro de conexão. Verifique se o servidor está rodando.', true);
+      } finally {
+        youtubeBtn.disabled = false;
+        youtubeBtn.textContent = 'Baixar';
+      }
+    });
+
+    updateQualityButtons();
+  </script>
+</body>
+</html>
