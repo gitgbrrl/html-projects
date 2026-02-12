@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Block Blast Pro Edition</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --accent: #c9a227;
+            --text-color: #1a1a2e;
+            --canvas-bg: rgba(220, 225, 235, 0.85);
+            --canvas-border: rgba(255, 255, 255, 0.6);
+            --game-over-bg: rgba(0, 0, 0, 0.85);
+            --empty-cell: rgba(0, 0, 0, 0.06);
+            --btn-gradient-start: #3498db;
+            --btn-gradient-end: #2980b9;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0f0f1a;
+            --accent: #f1c40f;
+            --text-color: #f8fafc;
+            --canvas-bg: rgba(20, 30, 48, 0.7);
+            --canvas-border: rgba(255, 255, 255, 0.1);
+            --game-over-bg: rgba(0, 0, 0, 0.92);
+            --empty-cell: rgba(255, 255, 255, 0.05);
+            --btn-gradient-start: #3498db;
+            --btn-gradient-end: #2980b9;
+        }
+
+
+        * { transition: background-color 0.4s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        /* Fundo Abstrato Animado */
+        .bg-blur {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            filter: blur(80px);
+            opacity: 0.5;
+            background: 
+                radial-gradient(circle at 10% 20%, #e74c3c 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, #3498db 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, #9b59b6 0%, transparent 50%);
+            animation: moveBg 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes moveBg {
+            from { transform: scale(1) translate(0,0); }
+            to { transform: scale(1.3) translate(5%, 5%); }
+        }
+
+        .ui {
+            margin-top: 20px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        #score { 
+            font-size: 42px; 
+            font-weight: 900; 
+            color: var(--accent); 
+            text-shadow: 0 0 20px rgba(241, 196, 15, 0.6);
+            transition: transform 0.1s;
+        }
+        
+        #game-container {
+            position: relative;
+            margin-top: 10px;
+        }
+
+        canvas {
+            background: var(--canvas-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            border: 1px solid var(--canvas-border);
+            cursor: grab;
+        }
+        canvas:active { cursor: grabbing; }
+
+        [data-theme="dark"] canvas {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        #reset-btn {
+            margin-top: 15px;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--btn-gradient-start), var(--btn-gradient-end));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            transition: 0.2s;
+        }
+
+        #reset-btn:active { transform: scale(0.95); }
+
+        .theme-toggle {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            background: var(--canvas-bg);
+            color: var(--text-color);
+            border: 1px solid var(--canvas-border);
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .theme-toggle:hover { opacity: 0.9; }
+
+        .back-btn {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            background: var(--canvas-bg);
+            color: var(--text-color);
+            border: 1px solid var(--canvas-border);
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-btn:hover { opacity: 0.9; }
+
+        #game-over {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--game-over-bg);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 16px;
+            z-index: 10;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-blur"></div>
+
+    <a class="back-btn" href="index.html">← Voltar</a>
+    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Modo Escuro</button>
+
+    <div class="ui">
+        <div style="letter-spacing: 3px; font-size: 12px; opacity: 0.7;">PONTUAÇÃO</div>
+        <div id="score">0</div>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="game-over">
+            <h2 style="color: #e74c3c; font-size: 44px; margin: 0;">FIM!</h2>
+            <p id="final-score" style="font-size: 20px; margin: 10px 0 25px 0;">Pontos: 0</p>
+            <button id="reset-btn" onclick="resetGame()" style="background: #e74c3c;">Recomeçar</button>
+        </div>
+    </div>
+
+    <button id="reset-btn" onclick="resetGame()">Reiniciar</button>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreElement = document.getElementById('score');
+const gameOverScreen = document.getElementById('game-over');
+
+const GRID_SIZE = 8;
+const PADDING = 20;
+let cellSize = 0;
+let score = 0;
+let grid = [];
+let shapes = [];
+let draggingShape = null;
+let dragX = 0, dragY = 0, offsetX = 0, offsetY = 0;
+let displayDragX = 0, displayDragY = 0;
+const DRAG_LERP = 0.24;
+const LIFT_OFFSET_Y = -28;
+const DRAG_SCALE = 1.08;
+const PICK_TOLERANCE = 22;
+const DROP_SEARCH_RADIUS = 1;
+
+function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+    };
+}
+
+let particles = [];
+let floatingTexts = [];
+
+const COLORS = ['#FF3E3E', '#2ECC71', '#3498DB', '#F1C40F', '#9B59B6', '#1ABC9C', '#E67E22'];
+const SHAPES = [
+    [[1,1],[1,1]], [[1,1,1,1]], [[1],[1],[1],[1]], [[1,1,1],[0,1,0]],
+    [[1,1,0],[0,1,1]], [[1,0],[1,0],[1,1]], [[1]], [[1,1,1]], [[1,1],[1,0]]
+];
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x; this.y = y; this.color = color;
+        this.size = Math.random() * 6 + 2;
+        this.vx = (Math.random() - 0.5) * 10;
+        this.vy = (Math.random() - 0.5) * 10;
+        this.life = 1.0;
+    }
+    update() { this.x += this.vx; this.y += this.vy; this.life -= 0.03; }
+    draw() {
+        ctx.globalAlpha = this.life;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+}
+
+class FloatingText {
+    constructor(x, y, text) {
+        this.x = x; this.y = y; this.text = text;
+        this.opacity = 1.0;
+        this.vY = -2;
+    }
+    update() { this.y += this.vY; this.opacity -= 0.02; }
+    draw() {
+        ctx.save();
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = "#FFF";
+        ctx.shadowColor = "#f1c40f";
+        ctx.shadowBlur = 10;
+        ctx.font = "bold 28px Segoe UI";
+        ctx.textAlign = "center";
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.restore();
+    }
+}
+
+function init() {
+    resize();
+    resetGame();
+    animate();
+}
+
+function resize() {
+    const width = Math.min(window.innerWidth - 40, 400);
+    canvas.width = width;
+    canvas.height = width * 1.5;
+    cellSize = (canvas.width - (PADDING * 2)) / GRID_SIZE;
+}
+
+function resetGame() {
+    grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+    score = 0;
+    particles = [];
+    floatingTexts = [];
+    updateUI();
+    spawnShapes();
+    gameOverScreen.style.display = 'none';
+}
+
+const HAND_SCALE = 0.5;
+const HAND_BASELINE_OFFSET = 52;
+
+function spawnShapes() {
+    shapes = [];
+    const slotWidth = canvas.width / 3;
+    const handBaselineY = canvas.height - HAND_BASELINE_OFFSET;
+    for (let i = 0; i < 3; i++) {
+        const blocks = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+        const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        const shapeW = blocks[0].length * cellSize * HAND_SCALE;
+        const shapeH = blocks.length * cellSize * HAND_SCALE;
+        const slotCenterX = (i + 0.5) * slotWidth;
+        shapes.push({
+            blocks, color,
+            x: slotCenterX - shapeW / 2,
+            y: handBaselineY - shapeH / 2,
+            scale: HAND_SCALE
+        });
+    }
+    checkGameOver();
+}
+
+function checkLines() {
+    let rows = [], cols = [];
+    for (let r = 0; r < GRID_SIZE; r++) if (grid[r].every(c => c !== 0)) rows.push(r);
+    for (let c = 0; c < GRID_SIZE; c++) if (grid.every(r => r[c] !== 0)) cols.push(c);
+
+    const totalLines = rows.length + cols.length;
+    if (totalLines > 0) {
+        const points = totalLines * 150 * totalLines;
+        score += points;
+        
+        const centerX = canvas.width / 2;
+        const centerY = canvas.width / 2;
+        floatingTexts.push(new FloatingText(centerX, centerY, `+${points}`));
+        
+        scoreElement.style.transform = "scale(1.2)";
+        setTimeout(() => scoreElement.style.transform = "scale(1)", 150);
+
+        rows.forEach(r => {
+            for(let c=0; c<GRID_SIZE; c++){
+                explode(c, r, grid[r][c]);
+                grid[r][c] = 0;
+            }
+        });
+        cols.forEach(c => {
+            for(let r=0; r<GRID_SIZE; r++){
+                if(grid[r][c]) explode(c, r, grid[r][c]);
+                grid[r][c] = 0;
+            }
+        });
+        updateUI();
+    }
+}
+
+function explode(c, r, color) {
+    const x = PADDING + c * cellSize + cellSize/2;
+    const y = PADDING + r * cellSize + cellSize/2;
+    for(let i=0; i<6; i++) particles.push(new Particle(x, y, color));
+}
+
+function checkGameOver() {
+    const fits = shapes.some(s => {
+        for(let r=0; r<=GRID_SIZE-s.blocks.length; r++)
+            for(let c=0; c<=GRID_SIZE-s.blocks[0].length; c++)
+                if(canPlace(s, c, r)) return true;
+        return false;
+    });
+    if(!fits && shapes.length > 0) {
+        document.getElementById('final-score').innerText = `Final: ${score}`;
+        gameOverScreen.style.display = 'flex';
+    }
+}
+
+function canPlace(shape, col, row) {
+    return shape.blocks.every((rArr, rIdx) => 
+        rArr.every((cell, cIdx) => {
+            if(!cell) return true;
+            const tr = row + rIdx, tc = col + cIdx;
+            return tr >= 0 && tr < GRID_SIZE && tc >= 0 && tc < GRID_SIZE && !grid[tr][tc];
+        })
+    );
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const emptyCellColor = getComputedStyle(document.documentElement).getPropertyValue('--empty-cell').trim() || 'rgba(255,255,255,0.05)';
+    for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+            ctx.fillStyle = grid[r][c] || emptyCellColor;
+            const x = PADDING + c * cellSize, y = PADDING + r * cellSize;
+            ctx.beginPath();
+            ctx.roundRect(x + 2, y + 2, cellSize - 4, cellSize - 4, 8);
+            ctx.fill();
+        }
+    }
+
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => { p.update(); p.draw(); });
+    
+    floatingTexts = floatingTexts.filter(t => t.opacity > 0);
+    floatingTexts.forEach(t => { t.update(); t.draw(); });
+
+    shapes.forEach(s => {
+        if (s !== draggingShape) drawShape(s, s.x, s.y, s.scale);
+    });
+
+    if (draggingShape) {
+        displayDragX += (dragX - displayDragX) * DRAG_LERP;
+        displayDragY += (dragY - displayDragY) * DRAG_LERP;
+        const drawX = displayDragX - offsetX;
+        const drawY = displayDragY - offsetY + LIFT_OFFSET_Y;
+        const s = cellSize * DRAG_SCALE;
+        const w = draggingShape.blocks[0].length * s;
+        const h = draggingShape.blocks.length * s;
+        const centerX = drawX + w / 2;
+        const centerY = drawY + h / 2;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.35)';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY + 12, w * 0.45, h * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowColor = draggingShape.color;
+        ctx.shadowBlur = 35;
+        drawShape(draggingShape, drawX, drawY, DRAG_SCALE);
+        ctx.restore();
+    }
+}
+
+function drawShape(shape, x, y, scale) {
+    const s = cellSize * scale;
+    ctx.fillStyle = shape.color;
+    shape.blocks.forEach((row, rIdx) => {
+        row.forEach((cell, cIdx) => {
+            if (cell) {
+                ctx.beginPath();
+                ctx.roundRect(x + cIdx * s + 1, y + rIdx * s + 1, s - 2, s - 2, 6 * scale);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                ctx.fillRect(x + cIdx * s + 5*scale, y + rIdx * s + 5*scale, s/3, s/3);
+                ctx.fillStyle = shape.color;
+            }
+        });
+    });
+}
+
+function updateUI() { scoreElement.innerText = score; }
+
+function handleStart(e) {
+    if (gameOverScreen.style.display === 'flex') return;
+    const { x: cx, y: cy } = getCanvasCoords(e);
+
+    for (let i = shapes.length - 1; i >= 0; i--) {
+        const s = shapes[i];
+        const size = cellSize * s.scale;
+        const w = s.blocks[0].length * size;
+        const h = s.blocks.length * size;
+        const pad = PICK_TOLERANCE;
+        if (cx >= s.x - pad && cx <= s.x + w + pad && cy >= s.y - pad && cy <= s.y + h + pad) {
+            draggingShape = s;
+            const dragW = s.blocks[0].length * cellSize * DRAG_SCALE;
+            const dragH = s.blocks.length * cellSize * DRAG_SCALE;
+            offsetX = dragW / 2;
+            offsetY = dragH / 2 + LIFT_OFFSET_Y;
+            dragX = cx;
+            dragY = cy;
+            displayDragX = cx;
+            displayDragY = cy;
+            canvas.style.cursor = 'grabbing';
+            break;
+        }
+    }
+}
+
+function handleMove(e) {
+    if (!draggingShape) return;
+    const coords = getCanvasCoords(e);
+    dragX = coords.x;
+    dragY = coords.y;
+    if (e.cancelable) e.preventDefault();
+}
+
+function findBestPlacement(shape) {
+    const baseGx = Math.round((dragX - offsetX - PADDING) / cellSize);
+    const baseGy = Math.round((dragY - offsetY - PADDING) / cellSize);
+    const candidates = [];
+    for (let dy = -DROP_SEARCH_RADIUS; dy <= DROP_SEARCH_RADIUS; dy++) {
+        for (let dx = -DROP_SEARCH_RADIUS; dx <= DROP_SEARCH_RADIUS; dx++) {
+            const gx = baseGx + dx;
+            const gy = baseGy + dy;
+            if (canPlace(shape, gx, gy)) {
+                const dist = dx * dx + dy * dy;
+                candidates.push({ gx, gy, dist });
+            }
+        }
+    }
+    if (candidates.length === 0) return null;
+    candidates.sort((a, b) => a.dist - b.dist);
+    return { gx: candidates[0].gx, gy: candidates[0].gy };
+}
+
+function handleEnd() {
+    if (!draggingShape) return;
+    canvas.style.cursor = 'grab';
+    const placement = findBestPlacement(draggingShape);
+
+    if (placement) {
+        const { gx, gy } = placement;
+        draggingShape.blocks.forEach((rArr, rIdx) => {
+            rArr.forEach((cell, cIdx) => {
+                if (cell) grid[gy + rIdx][gx + cIdx] = draggingShape.color;
+            });
+        });
+        score += (draggingShape.blocks.flat().filter(b => b).length) * 10;
+        checkLines();
+        shapes = shapes.filter(s => s !== draggingShape);
+        if (shapes.length === 0) spawnShapes();
+        else checkGameOver();
+        updateUI();
+    }
+    draggingShape = null;
+}
+
+function animate() { draw(); requestAnimationFrame(animate); }
+
+canvas.addEventListener('mousedown', handleStart);
+window.addEventListener('mousemove', handleMove);
+window.addEventListener('mouseup', handleEnd);
+canvas.addEventListener('touchstart', handleStart, {passive: false});
+window.addEventListener('touchmove', handleMove, {passive: false});
+window.addEventListener('touchend', handleEnd);
+
+const themeBtn = document.getElementById('themeBtn');
+if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    themeBtn.innerHTML = '☀️ Modo Claro';
+}
+
+function toggleTheme() {
+    const theme = document.documentElement.getAttribute('data-theme');
+    if (theme === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+        themeBtn.innerHTML = '🌙 Modo Escuro';
+    } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        themeBtn.innerHTML = '☀️ Modo Claro';
+    }
+}
+
+init();
+</script>
+</body>
+</html>

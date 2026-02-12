@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pac-Man Modern Flow</title>
+    <style>
+        :root { --bg-color: #05050a; --pacman-color: #ffff00; --accent: #00d2ff; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: none; }
+        
+        body {
+            margin: 0; padding: 0; background-color: var(--bg-color); color: white;
+            font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column;
+            align-items: center; justify-content: space-between; height: 100dvh; overflow: hidden;
+        }
+
+        .bg-blur {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            filter: blur(60px); opacity: 0.4;
+            background: radial-gradient(circle at 10% 20%, #ff007a 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, #00d2ff 0%, transparent 40%);
+        }
+
+        .header { padding: 10px; display: flex; justify-content: space-around; width: 100%; max-width: 400px; align-items: center; }
+        .ui-box { background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        #score { font-size: 24px; font-weight: 900; color: #f1c40f; margin: 0; }
+
+        #game-container { flex-grow: 1; display: flex; align-items: center; justify-content: center; width: 100%; position: relative; }
+        canvas { background: rgba(0, 0, 0, 0.9); border-radius: 8px; border: 2px solid var(--accent); box-shadow: 0 0 20px rgba(0,210,255,0.2); }
+
+        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 100%; max-width: 320px; margin-bottom: env(safe-area-inset-bottom, 10px); }
+        .btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 22px; border-radius: 15px; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn:active { background: var(--accent); }
+        .btn-reset { background: rgba(231, 76, 60, 0.3); color: #ff7675; border: 1px solid rgba(231, 76, 60, 0.5); padding: 8px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="bg-blur"></div>
+    <div class="header">
+        <div class="ui-box"><div style="font-size: 10px; opacity: 0.7;">PONTOS</div><p id="score">0</p></div>
+        <button class="btn-reset" onclick="resetGame()">RESET</button>
+    </div>
+
+    <div id="game-container"><canvas id="gameCanvas"></canvas></div>
+
+    <div class="controls">
+        <div style="visibility:hidden"></div>
+        <button class="btn" onpointerdown="handleInput(0, -1)">▲</button>
+        <div style="visibility:hidden"></div>
+        <button class="btn" onpointerdown="handleInput(-1, 0)">◀</button>
+        <button class="btn" onpointerdown="handleInput(0, 1)">▼</button>
+        <button class="btn" onpointerdown="handleInput(1, 0)">▶</button>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+
+const TILE_SIZE = 20;
+const MAP_LAYOUT = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,0,1],
+    [1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
+    [1,1,1,1,0,1,1,1,2,1,2,1,1,1,0,1,1,1,1],
+    [2,2,2,1,0,1,2,2,2,2,2,2,2,1,0,1,2,2,2],
+    [1,1,1,1,0,1,2,1,1,2,1,1,2,1,0,1,1,1,1],
+    [0,0,0,0,0,2,2,2,2,2,2,2,2,2,0,0,0,0,0],
+    [1,1,1,1,0,1,2,1,1,1,1,1,2,1,0,1,1,1,1],
+    [2,2,2,1,0,1,2,2,2,2,2,2,2,1,0,1,2,2,2],
+    [1,1,1,1,0,1,2,1,1,1,1,1,2,1,0,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1],
+    [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
+    [1,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,1],
+    [1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
+    [1,0,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
+
+let currentMap, pacman, ghosts, score, gameRunning;
+const SPEED = 0.12; 
+
+function resetGame() {
+    currentMap = MAP_LAYOUT.map(row => [...row]);
+    score = 0; scoreEl.innerText = score;
+    pacman = { x: 9, y: 15, dirX: 0, dirY: 0, nextDirX: 0, nextDirY: 0, anim: 0 };
+    ghosts = [
+        { x: 9, y: 7, color: '#ff4b2b', dirX: 1, dirY: 0 },
+        { x: 9, y: 9, color: '#00d2ff', dirX: -1, dirY: 0 }
+    ];
+    gameRunning = true;
+    resize();
+}
+
+function resize() {
+    const availableHeight = window.innerHeight - 250;
+    const availableWidth = window.innerWidth - 20;
+    const scale = Math.min(availableWidth / (19 * TILE_SIZE), availableHeight / (21 * TILE_SIZE));
+    canvas.width = 19 * TILE_SIZE;
+    canvas.height = 21 * TILE_SIZE;
+    canvas.style.width = (canvas.width * scale) + "px";
+    canvas.style.height = (canvas.height * scale) + "px";
+}
+
+function isWall(x, y) {
+    let ix = Math.round(x);
+    let iy = Math.round(y);
+    if (ix < 0 || ix >= 19) return false; 
+    return currentMap[iy] && currentMap[iy][ix] === 1;
+}
+
+function handleInput(x, y) {
+    pacman.nextDirX = x;
+    pacman.nextDirY = y;
+}
+
+function update() {
+    if (!gameRunning) return;
+
+    // Buffer de direção inteligente
+    const threshold = 0.2;
+    if (Math.abs(pacman.x - Math.round(pacman.x)) < threshold && Math.abs(pacman.y - Math.round(pacman.y)) < threshold) {
+        if (!isWall(Math.round(pacman.x) + pacman.nextDirX, Math.round(pacman.y) + pacman.nextDirY)) {
+            pacman.x = Math.round(pacman.x);
+            pacman.y = Math.round(pacman.y);
+            pacman.dirX = pacman.nextDirX;
+            pacman.dirY = pacman.nextDirY;
+        }
+    }
+
+    // Movimentação contínua
+    if (!isWall(pacman.x + pacman.dirX * 0.5, pacman.y + pacman.dirY * 0.5)) {
+        pacman.x += pacman.dirX * SPEED;
+        pacman.y += pacman.dirY * SPEED;
+        pacman.anim += 0.25;
+    } else {
+        pacman.x = Math.round(pacman.x);
+        pacman.y = Math.round(pacman.y);
+    }
+
+    // Portal infinito lateral
+    if (pacman.x < -0.5) pacman.x = 18.5;
+    if (pacman.x > 18.5) pacman.x = -0.5;
+
+    // Colisão com pontos
+    let gx = Math.round(pacman.x);
+    let gy = Math.round(pacman.y);
+    if (currentMap[gy] && currentMap[gy][gx] === 0) {
+        currentMap[gy][gx] = 2;
+        score += 10; scoreEl.innerText = score;
+    }
+
+    // IA dos Fantasmas
+    ghosts.forEach(g => {
+        if (Math.abs(g.x - Math.round(g.x)) < 0.1 && Math.abs(g.y - Math.round(g.y)) < 0.1) {
+            const dirs = [[0,1], [0,-1], [1,0], [-1,0]];
+            const valid = dirs.filter(d => !isWall(g.x + d[0], g.y + d[1]));
+            if (isWall(g.x + g.dirX, g.y + g.dirY) || Math.random() < 0.2) {
+                const pick = valid[Math.floor(Math.random() * valid.length)];
+                if (pick) { g.dirX = pick[0]; g.dirY = pick[1]; }
+            }
+        }
+        g.x += g.dirX * (SPEED * 0.7);
+        g.y += g.dirY * (SPEED * 0.7);
+        if (Math.hypot(pacman.x - g.x, pacman.y - g.y) < 0.8) { gameRunning = false; setTimeout(resetGame, 500); }
+    });
+
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Labirinto Neon
+    currentMap.forEach((row, y) => {
+        row.forEach((cell, x) => {
+            if (cell === 1) {
+                ctx.strokeStyle = '#00d2ff'; ctx.lineWidth = 1.5;
+                ctx.strokeRect(x*TILE_SIZE+4, y*TILE_SIZE+4, TILE_SIZE-8, TILE_SIZE-8);
+            } else if (cell === 0) {
+                ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath();
+                ctx.arc(x*TILE_SIZE+TILE_SIZE/2, y*TILE_SIZE+TILE_SIZE/2, 2, 0, 7); ctx.fill();
+            }
+        });
+    });
+
+    // Pacman com rotação correta
+    ctx.fillStyle = var(--pacman-color); ctx.beginPath();
+    let rot = Math.atan2(pacman.dirY, pacman.dirX);
+    let mouth = (Math.sin(pacman.anim) + 1) * 0.25;
+    ctx.moveTo(pacman.x*TILE_SIZE+TILE_SIZE/2, pacman.y*TILE_SIZE+TILE_SIZE/2);
+    ctx.arc(pacman.x*TILE_SIZE+TILE_SIZE/2, pacman.y*TILE_SIZE+TILE_SIZE/2, TILE_SIZE/2-2, rot+mouth, rot+2*Math.PI-mouth);
+    ctx.fill();
+
+    // Fantasmas Modernos
+    ghosts.forEach(g => {
+        ctx.fillStyle = g.color; ctx.beginPath();
+        ctx.arc(g.x*TILE_SIZE+TILE_SIZE/2, g.y*TILE_SIZE+TILE_SIZE/2-2, TILE_SIZE/2-2, Math.PI, 0);
+        ctx.lineTo(g.x*TILE_SIZE+TILE_SIZE-2, g.y*TILE_SIZE+TILE_SIZE-2);
+        ctx.lineTo(g.x*TILE_SIZE+2, g.y*TILE_SIZE+TILE_SIZE-2); ctx.fill();
+        ctx.fillStyle = 'white'; ctx.fillRect(g.x*TILE_SIZE+5, g.y*TILE_SIZE+6, 3, 3); ctx.fillRect(g.x*TILE_SIZE+11, g.y*TILE_SIZE+6, 3, 3);
+    });
+}
+
+// Eventos de Teclado (Segurar tecla)
+const keys = {};
+window.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    updateKeys();
+});
+window.addEventListener('keyup', e => {
+    keys[e.key.toLowerCase()] = false;
+    updateKeys();
+});
+
+function updateKeys() {
+    if (keys['w'] || keys['arrowup']) handleInput(0, -1);
+    else if (keys['s'] || keys['arrowdown']) handleInput(0, 1);
+    else if (keys['a'] || keys['arrowleft']) handleInput(-1, 0);
+    else if (keys['d'] || keys['arrowright']) handleInput(1, 0);
+}
+
+window.addEventListener('resize', resize);
+resetGame();
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Idle Planet - Quantium</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --text-color: #1a1a2e;
+            --accent: #00d2ff;
+            --glass-bg: rgba(255, 255, 255, 0.5);
+            --glass-border: rgba(0, 0, 0, 0.08);
+        }
+        [data-theme="dark"] {
+            --bg-color: #0a0a12;
+            --text-color: #f8fafc;
+            --accent: #00d2ff;
+            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-blur {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            filter: blur(80px);
+            opacity: 0.45;
+            background:
+                radial-gradient(circle at 20% 30%, #00d2ff 0%, transparent 45%),
+                radial-gradient(circle at 80% 70%, #9b59b6 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, #0a0a12 0%, transparent 60%);
+            animation: moveBg 18s infinite alternate ease-in-out;
+        }
+        @keyframes moveBg {
+            from { transform: scale(1) translate(0, 0); }
+            to { transform: scale(1.2) translate(3%, 3%); }
+        }
+
+        .back-btn, .theme-toggle {
+            position: fixed;
+            top: 16px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            background: var(--glass-bg);
+            color: var(--text-color);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .back-btn { left: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .theme-toggle { right: 16px; }
+        .back-btn:hover, .theme-toggle:hover { opacity: 0.9; }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 80px 20px 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.05em;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+        }
+
+        .currency-panel {
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        }
+        .currency-label { font-size: 0.75rem; opacity: 0.8; letter-spacing: 0.1em; margin-bottom: 4px; }
+        #total { font-size: 2rem; font-weight: 900; color: var(--accent); text-shadow: 0 0 15px rgba(0,210,255,0.5); }
+        .per-sec { font-size: 0.9rem; opacity: 0.85; margin-top: 4px; }
+
+        .planet-wrap {
+            margin: 10px 0;
+        }
+        .planet {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            background: linear-gradient(145deg, #1e3a5f 0%, #0d1b2a 40%, #00d2ff 100%);
+            box-shadow:
+                inset -15px -15px 40px rgba(0,0,0,0.4),
+                inset 10px 10px 30px rgba(0, 210, 255, 0.15),
+                0 0 60px rgba(0, 210, 255, 0.3);
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .planet:hover { transform: scale(1.05); box-shadow: 0 0 80px rgba(0, 210, 255, 0.4); }
+        .planet:active { transform: scale(0.98); }
+        .planet::before {
+            content: '';
+            position: absolute;
+            top: 10%; left: 15%;
+            width: 25%; height: 25%;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+        }
+        .planet::after {
+            content: '';
+            position: absolute;
+            bottom: 20%; right: 20%;
+            width: 15%; height: 15%;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+        }
+        .planet span {
+            position: absolute;
+            bottom: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .upgrades-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            width: 100%;
+            text-align: left;
+        }
+        .upgrades-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .upgrade-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+        .upgrade-info { text-align: left; }
+        .upgrade-name { font-weight: 700; font-size: 0.95rem; margin: 0 0 2px 0; }
+        .upgrade-desc { font-size: 0.8rem; opacity: 0.85; margin: 0; }
+        .upgrade-owned { font-size: 0.75rem; opacity: 0.7; margin-top: 2px; }
+        .upgrade-right { display: flex; align-items: center; gap: 10px; }
+        .upgrade-cost {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        .upgrade-cost.cant { opacity: 0.5; }
+        .btn-buy {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: var(--accent);
+            color: #0a0a12;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.35);
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .btn-buy:hover:not(:disabled) { transform: scale(1.05); }
+        .btn-buy:active:not(:disabled) { transform: scale(0.98); }
+        .btn-buy:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-blur"></div>
+    <a class="back-btn" href="index.html">← Voltar</a>
+    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 Modo Escuro</button>
+
+    <div class="container">
+        <h1>IDLE PLANET</h1>
+
+        <div class="currency-panel">
+            <div class="currency-label">QUANTIUM</div>
+            <div id="total">0</div>
+            <div class="per-sec" id="perSec">+0 /s</div>
+        </div>
+
+        <div class="planet-wrap">
+            <div class="planet" id="planet" role="button" tabindex="0">
+                <span>Clique para extrair</span>
+            </div>
+        </div>
+
+        <h2 class="upgrades-title">Upgrades</h2>
+        <div class="upgrades-list" id="upgradesList"></div>
+    </div>
+
+    <script>
+        const UPGRADES = [
+            { id: 'solar', name: 'Coletor Solar', desc: '+0.2 Quantium/s', baseCost: 15, baseProd: 0.2, costMult: 1.12 },
+            { id: 'reactor', name: 'Reator de Fusão', desc: '+1 Quantium/s', baseCost: 100, baseProd: 1, costMult: 1.15 },
+            { id: 'miner', name: 'Nave Mineradora', desc: '+4 Quantium/s', baseCost: 500, baseProd: 4, costMult: 1.18 },
+            { id: 'orbital', name: 'Estação Orbital', desc: '+15 Quantium/s', baseCost: 2500, baseProd: 15, costMult: 1.2 },
+            { id: 'warp', name: 'Motor de Dobra', desc: '+50 Quantium/s', baseCost: 12000, baseProd: 50, costMult: 1.22 },
+        ];
+
+        let state = {
+            quantium: 0,
+            perSec: 0,
+            owned: {}
+        };
+        UPGRADES.forEach(u => { state.owned[u.id] = 0; });
+
+        const STORAGE_KEY = 'idlePlanetSave';
+
+        function format(n) {
+            if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
+            if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+            if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+            if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+            return Math.floor(n).toLocaleString('pt-BR');
+        }
+
+        function cost(upgrade) {
+            const o = state.owned[upgrade.id] || 0;
+            return Math.floor(upgrade.baseCost * Math.pow(upgrade.costMult, o));
+        }
+
+        function updatePerSec() {
+            state.perSec = UPGRADES.reduce((acc, u) => acc + (state.owned[u.id] || 0) * u.baseProd, 0);
+        }
+
+        function save() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    quantium: state.quantium,
+                    owned: state.owned,
+                    ts: Date.now()
+                }));
+            } catch (e) {}
+        }
+
+        function load() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                state.quantium = data.quantium ?? 0;
+                state.owned = { ...state.owned, ...(data.owned || {}) };
+                const ts = data.ts || 0;
+                const offlineSec = Math.min((Date.now() - ts) / 1000, 86400 * 7);
+                updatePerSec();
+                state.quantium += state.perSec * offlineSec;
+            } catch (e) {}
+        }
+
+        function render() {
+            document.getElementById('total').textContent = format(state.quantium);
+            document.getElementById('perSec').textContent = '+' + format(state.perSec) + ' /s';
+
+            const list = document.getElementById('upgradesList');
+            list.innerHTML = UPGRADES.map(u => {
+                const owned = state.owned[u.id] || 0;
+                const c = cost(u);
+                const canBuy = state.quantium >= c;
+                return `
+                    <div class="upgrade-card">
+                        <div class="upgrade-info">
+                            <p class="upgrade-name">${u.name}</p>
+                            <p class="upgrade-desc">${u.desc}</p>
+                            ${owned > 0 ? `<p class="upgrade-owned">Possui: ${owned}</p>` : ''}
+                        </div>
+                        <div class="upgrade-right">
+                            <span class="upgrade-cost ${canBuy ? '' : 'cant'}">${format(c)} Q</span>
+                            <button class="btn-buy" data-id="${u.id}" ${canBuy ? '' : 'disabled'}>Comprar</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            list.querySelectorAll('.btn-buy').forEach(btn => {
+                btn.onclick = () => buy(btn.dataset.id);
+            });
+        }
+
+        function buy(id) {
+            const u = UPGRADES.find(x => x.id === id);
+            if (!u) return;
+            const c = cost(u);
+            if (state.quantium < c) return;
+            state.quantium -= c;
+            state.owned[u.id] = (state.owned[u.id] || 0) + 1;
+            updatePerSec();
+            save();
+            render();
+        }
+
+        function clickPlanet() {
+            state.quantium += 1;
+            save();
+            document.getElementById('total').textContent = format(state.quantium);
+        }
+
+        let last = performance.now();
+        function gameLoop(now) {
+            const dt = Math.min((now - last) / 1000, 0.2);
+            last = now;
+            state.quantium += state.perSec * dt;
+            document.getElementById('total').textContent = format(state.quantium);
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById('planet').addEventListener('click', clickPlanet);
+        document.getElementById('planet').addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); clickPlanet(); } });
+
+        const themeBtn = document.getElementById('themeBtn');
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeBtn.innerHTML = '☀️ Modo Claro';
+        }
+        function toggleTheme() {
+            const theme = document.documentElement.getAttribute('data-theme');
+            if (theme === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeBtn.innerHTML = '🌙 Modo Escuro';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeBtn.innerHTML = '☀️ Modo Claro';
+            }
+        }
+
+        load();
+        updatePerSec();
+        render();
+        requestAnimationFrame(gameLoop);
+
+        setInterval(() => { render(); }, 400);
+        setInterval(save, 5000);
+    </script>
+</body>
+</html>
