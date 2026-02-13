@@ -33,7 +33,6 @@
       color: var(--text-main);
       min-height: 100vh;
       overflow-x: hidden;
-      padding-bottom: 48px;
     }
 
     .bg-container {
@@ -132,24 +131,60 @@
       color: var(--text-main);
     }
 
-    footer { padding: 40px; text-align: center; color: var(--text-sub); font-size: 0.9rem; }
-
-    .beta-banner {
+    .info-toggle {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      width: 100%;
-      background: #c62828;
-      color: white;
-      text-align: center;
-      padding: 10px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 0.15em;
+      top: 30px; left: 30px;
+      padding: 12px 20px;
+      font-weight: 600;
       z-index: 1000;
+      color: var(--text-main);
     }
+
+    .info-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .info-overlay.ativo { display: flex; }
+
+    .info-modal {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 20px 60px var(--shadow);
+      border-radius: 24px;
+      padding: 32px 40px;
+      max-width: 360px;
+      color: var(--text-main);
+    }
+    .info-modal h3 { margin: 0 0 16px; font-size: 1.25rem; }
+    .info-modal p { margin: 0 0 8px; color: var(--text-sub); font-size: 0.95rem; }
+    .info-modal .fechar {
+      margin-top: 20px;
+      padding: 10px 24px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      background: var(--bg-card);
+      color: var(--text-main);
+    }
+    .info-modal .fechar:hover { opacity: 0.9; }
+
+    footer { padding: 40px; text-align: center; color: var(--text-sub); font-size: 0.9rem; }
   </style>
+  <script>
+    // Aplica modo escuro antes de pintar a página (evita flash de modo claro)
+    if (localStorage.getItem('theme') !== 'light') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
 </head>
 <body>
 
@@ -159,7 +194,17 @@
     <div class="sphere sphere-3"></div>
   </div>
 
+  <button class="info-toggle glass" onclick="abrirInfo()">ℹ️ Informações</button>
   <button class="theme-toggle glass" id="themeBtn" onclick="toggleTheme()">🌙 Modo Escuro</button>
+
+  <div class="info-overlay" id="infoOverlay" onclick="fecharInfoClick(event)">
+    <div class="info-modal glass" onclick="event.stopPropagation()">
+      <h3>ℹ️ Sobre o projeto</h3>
+      <p><strong>Versão:</strong> Beta 0.1.1</p>
+      <p><strong>Início do projeto:</strong> 21/12/2025</p>
+      <button class="fechar" onclick="fecharInfo()">Fechar</button>
+    </div>
+  </div>
 
   <header>
     <h1>Meus Projetos</h1>
@@ -199,9 +244,17 @@
     <p>&copy; 2026 - Gabriel</p>
   </footer>
 
-  <div class="beta-banner">VERSÃO BETA 0.1.1</div>
-
   <script>
+    function abrirInfo() {
+      document.getElementById('infoOverlay').classList.add('ativo');
+    }
+    function fecharInfo() {
+      document.getElementById('infoOverlay').classList.remove('ativo');
+    }
+    function fecharInfoClick(ev) {
+      if (ev.target.id === 'infoOverlay') fecharInfo();
+    }
+
     function abrirProjeto(nomeDoArquivo) {
       // Alterado: agora abre na mesma aba
       window.location.href = nomeDoArquivo;
@@ -209,7 +262,8 @@
 
     const themeBtn = document.getElementById('themeBtn');
     
-    if (localStorage.getItem('theme') === 'dark') {
+    // Padrão: modo escuro. Só mostra claro se o usuário salvou 'light'
+    if (localStorage.getItem('theme') !== 'light') {
       document.documentElement.setAttribute('data-theme', 'dark');
       themeBtn.innerHTML = '☀️ Modo Claro';
     }
