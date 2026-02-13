@@ -80,29 +80,8 @@
       position: relative;
     }
 
-    /* Painel de configuração */
-    .config-panel {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      background: var(--panel-bg);
-      backdrop-filter: blur(12px);
-      border-radius: 16px;
-      padding: 1.25rem;
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      z-index: 100;
-      max-width: 280px;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-
-    .config-panel.collapsed {
-      transform: translateX(calc(100% + 1rem));
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .config-toggle {
+    /* Botão mutar */
+    .btn-mute {
       position: fixed;
       top: 1rem;
       right: 1rem;
@@ -121,87 +100,67 @@
       align-items: center;
       justify-content: center;
     }
-
-    .config-toggle:hover {
+    .btn-mute:hover {
       background: var(--accent-hover);
       transform: scale(1.05);
     }
-
-    .config-panel:not(.collapsed) + .config-toggle {
-      right: calc(280px + 2rem);
+    .btn-mute.muted {
+      background: var(--dice-face);
+      opacity: 0.8;
     }
 
-    .config-panel h3 {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: var(--accent);
+    /* Controles quantidade e lados */
+    .opcoes-rolar {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 1.5rem;
+    }
+    .opcao-grupo {
+      display: flex;
+      flex-direction: column;
       align-items: center;
       gap: 0.5rem;
     }
-
-    .config-group {
-      margin-bottom: 1rem;
-    }
-
-    .config-group label {
-      display: block;
-      font-size: 0.8rem;
+    .opcao-grupo span {
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--text-muted);
-      margin-bottom: 0.4rem;
     }
-
-    .config-group input[type="number"] {
-      width: 100%;
-      padding: 0.6rem 0.8rem;
-      border-radius: 10px;
-      border: 2px solid rgba(255, 255, 255, 0.1);
-      background: rgba(0, 0, 0, 0.3);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 1rem;
-      transition: border-color 0.2s ease;
-    }
-
-    .config-group input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .config-group input::-webkit-inner-spin-button {
-      opacity: 1;
-    }
-
-    .option-buttons {
+    .stepper {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
+      align-items: center;
+      gap: 0;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
     }
-
-    .option-btn {
-      padding: 0.5rem 0.75rem;
-      border-radius: 10px;
-      border: 2px solid rgba(255, 255, 255, 0.15);
-      background: rgba(0, 0, 0, 0.2);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .option-btn:hover {
-      border-color: var(--accent);
-      background: rgba(245, 158, 11, 0.15);
-    }
-
-    .option-btn.active {
-      border-color: var(--accent);
+    .stepper button {
+      width: 44px;
+      height: 44px;
+      border: none;
       background: var(--accent);
       color: var(--bg-primary);
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .stepper button:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+    .stepper button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .stepper .valor {
+      min-width: 52px;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
     }
 
     /* Área do dado */
@@ -412,32 +371,13 @@
 
     /* Responsivo */
     @media (max-width: 768px) {
-      .config-panel {
-        top: auto;
-        bottom: 0;
-        right: 0;
-        left: 0;
-        max-width: 100%;
-        border-radius: 20px 20px 0 0;
-      }
-
-      .config-panel.collapsed {
-        transform: translateY(100%);
-      }
-
-      .config-panel:not(.collapsed) + .config-toggle {
-        right: 1rem;
-        bottom: calc(100vh - 5rem);
-      }
-
-      .config-toggle {
-        top: auto;
-        bottom: 1rem;
-      }
-
       .btn-voltar {
         top: auto;
         bottom: 1rem;
+      }
+
+      .opcoes-rolar {
+        gap: 1.5rem;
       }
 
       .dice-face {
@@ -469,43 +409,7 @@
 </head>
 <body class="bg-escuro">
   <a href="index.html" class="btn-voltar">← Voltar</a>
-  <button class="config-toggle" id="configToggle" aria-label="Abrir configurações">⚙️</button>
-
-  <aside class="config-panel collapsed" id="configPanel">
-    <h3>⚙️ Configurações</h3>
-
-    <div class="config-group">
-      <label for="diceCount">Quantidade de dados</label>
-      <input type="number" id="diceCount" min="1" max="20" value="1">
-    </div>
-
-    <div class="config-group">
-      <label for="diceSides">Lados de cada dado (d?)</label>
-      <input type="number" id="diceSides" min="2" max="100" value="6">
-    </div>
-
-    <div class="config-group">
-      <label>Efeito de animação</label>
-      <div class="option-buttons" id="animationOptions">
-        <button type="button" class="option-btn active" data-effect="normal">Normal</button>
-        <button type="button" class="option-btn" data-effect="explosao">Explosão</button>
-        <button type="button" class="option-btn" data-effect="bounce">Bounce</button>
-        <button type="button" class="option-btn" data-effect="shake">Shake</button>
-        <button type="button" class="option-btn" data-effect="flip">Flip</button>
-      </div>
-    </div>
-
-    <div class="config-group">
-      <label>Plano de fundo</label>
-      <div class="option-buttons" id="backgroundOptions">
-        <button type="button" class="option-btn active" data-bg="escuro">Escuro</button>
-        <button type="button" class="option-btn" data-bg="verde">Verde</button>
-        <button type="button" class="option-btn" data-bg="azul">Azul</button>
-        <button type="button" class="option-btn" data-bg="roxo">Roxo</button>
-        <button type="button" class="option-btn" data-bg="vermelho">Vermelho</button>
-      </div>
-    </div>
-  </aside>
+  <button class="btn-mute" id="btnMute" type="button" aria-label="Mutear som" title="Som">🔊</button>
 
   <main class="container">
     <div class="dice-area">
@@ -524,6 +428,25 @@
       <div class="multi-dice" id="multiDice"></div>
 
       <button class="roll-btn" id="rollBtn">Girar!</button>
+
+      <div class="opcoes-rolar">
+        <div class="opcao-grupo">
+          <span>Quantidade de dados</span>
+          <div class="stepper">
+            <button type="button" id="btnMenosDados" aria-label="Menos dados">−</button>
+            <span class="valor" id="valorDados">1</span>
+            <button type="button" id="btnMaisDados" aria-label="Mais dados">+</button>
+          </div>
+        </div>
+        <div class="opcao-grupo">
+          <span>Lados do dado</span>
+          <div class="stepper">
+            <button type="button" id="btnMenosLados" aria-label="Menos lados">−</button>
+            <span class="valor" id="valorLados">6</span>
+            <button type="button" id="btnMaisLados" aria-label="Mais lados">+</button>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -534,36 +457,66 @@
     const resultDetails = document.getElementById('resultDetails');
     const multiDice = document.getElementById('multiDice');
     const rollBtn = document.getElementById('rollBtn');
-    const configPanel = document.getElementById('configPanel');
-    const configToggle = document.getElementById('configToggle');
-    const diceCountInput = document.getElementById('diceCount');
-    const diceSidesInput = document.getElementById('diceSides');
+    const valorDados = document.getElementById('valorDados');
+    const valorLados = document.getElementById('valorLados');
+    const btnMenosDados = document.getElementById('btnMenosDados');
+    const btnMaisDados = document.getElementById('btnMaisDados');
+    const btnMenosLados = document.getElementById('btnMenosLados');
+    const btnMaisLados = document.getElementById('btnMaisLados');
+    const btnMute = document.getElementById('btnMute');
 
-    let currentAnimation = 'normal';
+    const currentAnimation = 'shake';
     let isRolling = false;
+    let muted = false;
 
-    // Toggle painel
-    configToggle.addEventListener('click', () => {
-      configPanel.classList.toggle('collapsed');
-      configToggle.textContent = configPanel.classList.contains('collapsed') ? '⚙️' : '✕';
+    function playBeep() {
+      if (muted) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 440;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.15);
+      } catch (_) {}
+    }
+
+    function getCount() { return Math.max(1, Math.min(20, parseInt(valorDados.textContent, 10) || 1)); }
+    function getSides() { return Math.max(2, Math.min(100, parseInt(valorLados.textContent, 10) || 6)); }
+
+    function setCount(v) {
+      v = Math.max(1, Math.min(20, v));
+      valorDados.textContent = v;
+      btnMenosDados.disabled = v <= 1;
+      btnMaisDados.disabled = v >= 20;
+    }
+    function setSides(v) {
+      v = Math.max(2, Math.min(100, v));
+      valorLados.textContent = v;
+      btnMenosLados.disabled = v <= 2;
+      btnMaisLados.disabled = v >= 100;
+    }
+
+    btnMenosDados.addEventListener('click', () => setCount(getCount() - 1));
+    btnMaisDados.addEventListener('click', () => setCount(getCount() + 1));
+    btnMenosLados.addEventListener('click', () => setSides(getSides() - 1));
+    btnMaisLados.addEventListener('click', () => setSides(getSides() + 1));
+
+    btnMute.addEventListener('click', () => {
+      muted = !muted;
+      btnMute.classList.toggle('muted', muted);
+      btnMute.textContent = muted ? '🔇' : '🔊';
+      btnMute.title = muted ? 'Ativar som' : 'Mutear som';
+      btnMute.setAttribute('aria-label', muted ? 'Ativar som' : 'Mutear som');
     });
 
-    // Animação
-    document.getElementById('animationOptions').addEventListener('click', (e) => {
-      if (!e.target.matches('.option-btn')) return;
-      document.querySelectorAll('#animationOptions .option-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      currentAnimation = e.target.dataset.effect;
-    });
-
-    // Background
-    document.getElementById('backgroundOptions').addEventListener('click', (e) => {
-      if (!e.target.matches('.option-btn')) return;
-      document.body.classList.remove('bg-escuro', 'bg-verde', 'bg-azul', 'bg-roxo', 'bg-vermelho');
-      document.body.classList.add('bg-' + e.target.dataset.bg);
-      document.querySelectorAll('#backgroundOptions .option-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-    });
+    setCount(1);
+    setSides(6);
 
     function randomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -571,11 +524,8 @@
 
     function rollDice() {
       if (isRolling) return;
-      const count = Math.max(1, Math.min(20, parseInt(diceCountInput.value) || 1));
-      const sides = Math.max(2, Math.min(100, parseInt(diceSidesInput.value) || 6));
-
-      diceCountInput.value = count;
-      diceSidesInput.value = sides;
+      const count = getCount();
+      const sides = getSides();
 
       isRolling = true;
       rollBtn.disabled = true;
@@ -583,7 +533,6 @@
       resultDetails.textContent = '';
       multiDice.innerHTML = '';
 
-      // Mostrar primeiro dado grande
       diceFace.style.display = 'flex';
       diceWrapper.className = 'dice-wrapper roll-' + currentAnimation;
 
@@ -592,7 +541,7 @@
         results.push(randomInt(1, sides));
       }
 
-      const duration = currentAnimation === 'explosao' ? 1200 : currentAnimation === 'bounce' ? 1100 : 1000;
+      const duration = 1000;
       setTimeout(() => {
         diceWrapper.classList.remove('roll-' + currentAnimation);
 
@@ -613,19 +562,13 @@
           diceFace.style.display = 'flex';
         }
 
+        playBeep();
         isRolling = false;
         rollBtn.disabled = false;
       }, duration);
     }
 
     rollBtn.addEventListener('click', rollDice);
-
-    // Enter no input dispara rolar
-    [diceCountInput, diceSidesInput].forEach(input => {
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') rollDice();
-      });
-    });
   </script>
 </body>
 </html>

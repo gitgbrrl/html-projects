@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slots Machine — Caça-níquel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --accent: #f59e0b;
+      --accent-hover: #fbbf24;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --radius: 16px;
+      --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245, 158, 11, 0.12), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(168, 85, 247, 0.08), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    h1 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+
+    .btn-voltar {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--surface-2);
+      border: none;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn-voltar:hover {
+      background: var(--accent);
+      color: var(--bg);
+      transform: translateX(-2px);
+    }
+
+    /* Máquina tipo cassino */
+    .machine {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      border: 3px solid var(--accent);
+    }
+
+    .machine-title {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .reels-wrap {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .reel {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(180deg, var(--surface-2) 0%, var(--bg) 100%);
+      border-radius: 12px;
+      border: 4px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    .reel .symbol {
+      font-size: 3.5rem;
+      line-height: 1;
+      transition: transform 0.1s linear;
+    }
+
+    .reel.girando .symbol {
+      animation: reelSpin 0.08s linear infinite;
+    }
+
+    @keyframes reelSpin {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-100%); }
+    }
+
+    .resultado-msg {
+      min-height: 48px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--text-muted);
+    }
+    .resultado-msg.ganhou {
+      color: var(--accent);
+      animation: winPulse 0.5s ease;
+    }
+    @keyframes winPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .btn-girar {
+      display: block;
+      width: 100%;
+      max-width: 260px;
+      margin: 0 auto;
+      padding: 18px 32px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--bg);
+      background: linear-gradient(135deg, var(--accent), #fbbf24);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-girar:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(245, 158, 11, 0.5);
+    }
+    .btn-girar:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎰 Slots Machine</h1>
+      <div class="header-actions">
+        <a href="index.html" class="btn-voltar">← Voltar</a>
+      </div>
+    </header>
+
+    <section class="machine">
+      <p class="machine-title">Aline os símbolos na linha e boa sorte!</p>
+      <div class="reels-wrap">
+        <div class="reel" id="reel1"><span class="symbol" id="sym1">🍒</span></div>
+        <div class="reel" id="reel2"><span class="symbol" id="sym2">🍋</span></div>
+        <div class="reel" id="reel3"><span class="symbol" id="sym3">💎</span></div>
+      </div>
+      <p class="resultado-msg" id="resultado-msg">Gire e tente a sorte!</p>
+      <button type="button" class="btn-girar" id="btn-girar">Girar!</button>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      // Símbolos clássicos de caça-níquel (frutas, 7, diamante)
+      const SIMBOLOS = ['🍒', '🍋', '🍊', '💎', '7️⃣', '⭐'];
+      const reel1 = document.getElementById('reel1');
+      const reel2 = document.getElementById('reel2');
+      const reel3 = document.getElementById('reel3');
+      const sym1 = document.getElementById('sym1');
+      const sym2 = document.getElementById('sym2');
+      const sym3 = document.getElementById('sym3');
+      const resultadoMsg = document.getElementById('resultado-msg');
+      const btnGirar = document.getElementById('btn-girar');
+
+      let girando = false;
+
+      function randomSymbol() {
+        return SIMBOLOS[Math.floor(Math.random() * SIMBOLOS.length)];
+      }
+
+      function girarReel(reelEl, symEl, delay, finalSymbol) {
+        return new Promise((resolve) => {
+          reelEl.classList.add('girando');
+          const interval = setInterval(() => {
+            symEl.textContent = randomSymbol();
+          }, 80);
+          setTimeout(() => {
+            clearInterval(interval);
+            symEl.textContent = finalSymbol;
+            reelEl.classList.remove('girando');
+            resolve();
+          }, delay);
+        });
+      }
+
+      function playBeep() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = 523;
+          osc.type = 'sine';
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.15);
+        } catch (_) {}
+      }
+
+      async function girar() {
+        if (girando) return;
+        girando = true;
+        btnGirar.disabled = true;
+        resultadoMsg.textContent = '...';
+        resultadoMsg.classList.remove('ganhou');
+
+        const s1 = randomSymbol();
+        const s2 = randomSymbol();
+        const s3 = randomSymbol();
+
+        const t1 = 800;
+        const t2 = 1200;
+        const t3 = 1600;
+
+        await Promise.all([
+          girarReel(reel1, sym1, t1, s1),
+          girarReel(reel2, sym2, t2, s2),
+          girarReel(reel3, sym3, t3, s3)
+        ]);
+
+        const ganhou = s1 === s2 && s2 === s3;
+        if (ganhou) {
+          resultadoMsg.textContent = '🎉 Linha! Você ganhou! 🎉';
+          resultadoMsg.classList.add('ganhou');
+          playBeep();
+        } else {
+          resultadoMsg.textContent = 'Tente novamente!';
+        }
+
+        girando = false;
+        btnGirar.disabled = false;
+      }
+
+      btnGirar.addEventListener('click', girar);
+    })();
+  </script>
+</body>
+</html>

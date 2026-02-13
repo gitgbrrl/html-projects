@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uno — Jogo de Cartas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --accent: #f59e0b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --radius: 12px;
+      --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      --vermelho: #dc2626;
+      --amarelo: #eab308;
+      --verde: #22c55e;
+      --azul: #3b82f6;
+      --preto: #1f2937;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245,158,11,0.12), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .container { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; padding: 20px 16px 40px; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    h1 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: clamp(1.4rem, 4vw, 1.8rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .btn-voltar {
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--surface-2);
+      border: none;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn-voltar:hover { background: var(--accent); color: var(--bg); transform: translateX(-2px); }
+
+    /* Tela de setup */
+    .setup {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+    .setup h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.25rem;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .campo {
+      margin-bottom: 20px;
+    }
+    .campo label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .campo select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 2px solid var(--surface-2);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+    }
+    .btn-iniciar {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--bg);
+      background: linear-gradient(135deg, var(--accent), #fbbf24);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-iniciar:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,158,11,0.4); }
+
+    /* Tela de jogo */
+    .jogo { display: none; }
+    .jogo.ativo { display: block; }
+
+    .info-turno {
+      text-align: center;
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .info-turno .destaque { color: var(--accent); font-weight: 700; }
+
+    .oponentes {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .oponente {
+      background: var(--surface-2);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      min-width: 80px;
+      text-align: center;
+    }
+    .oponente.vez { border: 2px solid var(--accent); color: var(--accent); }
+
+    .mesa {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .monte-comprar {
+      width: 70px;
+      height: 98px;
+      background: linear-gradient(145deg, #475569, var(--surface-2));
+      border-radius: 8px;
+      border: 2px solid var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .monte-comprar:hover { border-color: var(--accent); }
+
+    .carta-topo {
+      width: 72px;
+      height: 100px;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .carta-topo.cor-r { background: var(--vermelho); color: #fff; }
+    .carta-topo.cor-y { background: var(--amarelo); color: #1f2937; }
+    .carta-topo.cor-g { background: var(--verde); color: #fff; }
+    .carta-topo.cor-b { background: var(--azul); color: #fff; }
+    .carta-topo.cor-p { background: var(--preto); color: #fff; }
+
+    .sua-mao {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .sua-mao h3 {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .mao-cartas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      min-height: 110px;
+    }
+    .carta {
+      width: 56px;
+      height: 78px;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+      flex-shrink: 0;
+    }
+    .carta:hover { transform: translateY(-4px); }
+    .carta.jogavel { border-color: var(--accent); box-shadow: 0 0 12px rgba(245,158,11,0.5); cursor: pointer; }
+    .carta.jogavel:hover { transform: translateY(-6px); }
+    .carta.nao-jogavel { opacity: 0.6; cursor: not-allowed; }
+    .carta.cor-r { background: var(--vermelho); color: #fff; }
+    .carta.cor-y { background: var(--amarelo); color: #1f2937; }
+    .carta.cor-g { background: var(--verde); color: #fff; }
+    .carta.cor-b { background: var(--azul); color: #fff; }
+    .carta.cor-p { background: var(--preto); color: #fff; }
+
+    .acoes {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-comprar {
+      padding: 12px 24px;
+      font-weight: 600;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 2px solid var(--text-muted);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-comprar:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-comprar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .escolher-cor {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    .escolher-cor.ativo { display: flex; }
+    .escolher-cor span { font-size: 0.9rem; margin-right: 4px; }
+    .btn-cor {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .btn-cor:hover { transform: scale(1.1); }
+    .btn-cor.r { background: var(--vermelho); }
+    .btn-cor.y { background: var(--amarelo); }
+    .btn-cor.g { background: var(--verde); }
+    .btn-cor.b { background: var(--azul); }
+
+    .mensagem-fim {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .mensagem-fim.ativo { display: flex; }
+    .mensagem-fim .box {
+      background: var(--surface);
+      padding: 32px;
+      border-radius: var(--radius);
+      text-align: center;
+      max-width: 360px;
+    }
+    .mensagem-fim h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+    }
+    .mensagem-fim p { color: var(--text-muted); margin-bottom: 20px; }
+    .mensagem-fim .btn-nova { padding: 12px 24px; background: var(--accent); color: var(--bg); border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+
+    .log-msg {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 12px;
+      min-height: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🃏 Uno</h1>
+      <a href="index.html" class="btn-voltar">← Voltar</a>
+    </header>
+
+    <section class="setup" id="setup">
+      <h2>Configurar partida</h2>
+      <div class="campo">
+        <label>Quantos bots jogar contra?</label>
+        <select id="num-bots">
+          <option value="1">1 bot</option>
+          <option value="2">2 bots</option>
+          <option value="3">3 bots</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Dificuldade dos bots</label>
+        <select id="dificuldade">
+          <option value="facil">Fácil</option>
+          <option value="medio">Médio</option>
+          <option value="dificil">Difícil</option>
+        </select>
+      </div>
+      <button type="button" class="btn-iniciar" id="btn-iniciar">Iniciar jogo</button>
+    </section>
+
+    <section class="jogo" id="jogo">
+      <p class="info-turno" id="info-turno"></p>
+      <div class="oponentes" id="oponentes"></div>
+      <div class="mesa">
+        <div class="monte-comprar" id="monte-comprar" title="Comprar carta">📚</div>
+        <div class="carta-topo" id="carta-topo">—</div>
+      </div>
+      <div class="sua-mao">
+        <h3>Suas cartas</h3>
+        <div class="mao-cartas" id="mao-cartas"></div>
+        <div class="escolher-cor" id="escolher-cor">
+          <span>Escolha a cor:</span>
+          <button type="button" class="btn-cor r" data-cor="r"></button>
+          <button type="button" class="btn-cor y" data-cor="y"></button>
+          <button type="button" class="btn-cor g" data-cor="g"></button>
+          <button type="button" class="btn-cor b" data-cor="b"></button>
+        </div>
+        <div class="acoes">
+          <button type="button" class="btn-comprar" id="btn-comprar">Comprar 1 carta</button>
+        </div>
+      </div>
+      <p class="log-msg" id="log-msg"></p>
+    </section>
+  </div>
+
+  <div class="mensagem-fim" id="mensagem-fim">
+    <div class="box">
+      <h2 id="fim-titulo">Fim do jogo</h2>
+      <p id="fim-texto"></p>
+      <button type="button" class="btn-nova" id="btn-nova-partida">Nova partida</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const CORES = ['r', 'y', 'g', 'b'];
+      const CORES_NOMES = { r: 'Vermelho', y: 'Amarelo', g: 'Verde', b: 'Azul' };
+      const TIPOS_NUM = ['0','1','2','3','4','5','6','7','8','9'];
+      const TIPOS_ESP = ['skip','reverse','draw2'];
+      const TIPOS_WILD = ['wild','wild4'];
+
+      function criarBaralho() {
+        const baralho = [];
+        for (const cor of CORES) {
+          baralho.push({ cor, tipo: '0', selvagem: false });
+          for (let i = 1; i <= 9; i++) {
+            baralho.push({ cor, tipo: String(i), selvagem: false });
+            baralho.push({ cor, tipo: String(i), selvagem: false });
+          }
+          for (const t of TIPOS_ESP) {
+            baralho.push({ cor, tipo: t, selvagem: false });
+            baralho.push({ cor, tipo: t, selvagem: false });
+          }
+        }
+        for (let i = 0; i < 4; i++) {
+          baralho.push({ cor: 'p', tipo: 'wild', selvagem: true });
+          baralho.push({ cor: 'p', tipo: 'wild4', selvagem: true });
+        }
+        return baralho;
+      }
+
+      function embaralhar(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+
+      function podeJogar(carta, topo, corAtual) {
+        if (carta.selvagem) return true;
+        if (carta.cor === corAtual) return true;
+        if (carta.tipo === topo.tipo) return true;
+        return false;
+      }
+
+      function textoCarta(c) {
+        if (c.tipo === 'skip') return '⏭';
+        if (c.tipo === 'reverse') return '🔄';
+        if (c.tipo === 'draw2') return '+2';
+        if (c.tipo === 'wild') return '🌈';
+        if (c.tipo === 'wild4') return '🌈+4';
+        return c.tipo;
+      }
+
+      const setup = document.getElementById('setup');
+      const jogo = document.getElementById('jogo');
+      const numBotsSelect = document.getElementById('num-bots');
+      const dificuldadeSelect = document.getElementById('dificuldade');
+      const btnIniciar = document.getElementById('btn-iniciar');
+      const infoTurno = document.getElementById('info-turno');
+      const oponentesEl = document.getElementById('oponentes');
+      const monteComprar = document.getElementById('monte-comprar');
+      const cartaTopoEl = document.getElementById('carta-topo');
+      const maoCartasEl = document.getElementById('mao-cartas');
+      const escolherCorEl = document.getElementById('escolher-cor');
+      const btnComprar = document.getElementById('btn-comprar');
+      const logMsg = document.getElementById('log-msg');
+      const mensagemFim = document.getElementById('mensagem-fim');
+      const fimTitulo = document.getElementById('fim-titulo');
+      const fimTexto = document.getElementById('fim-texto');
+      const btnNovaPartida = document.getElementById('btn-nova-partida');
+
+      let estado = null;
+
+      function log(msg) {
+        logMsg.textContent = msg;
+      }
+
+      function atualizarTopo() {
+        const t = estado.descarte[estado.descarte.length - 1];
+        const cor = estado.corAtual || t.cor;
+        cartaTopoEl.className = 'carta-topo cor-' + (cor === 'p' ? 'p' : cor);
+        cartaTopoEl.textContent = textoCarta(t);
+      }
+
+      function atualizarOponentes() {
+        oponentesEl.innerHTML = '';
+        const total = 1 + estado.numBots;
+        for (let i = 1; i < total; i++) {
+          const idx = (estado.jogadorAtualIdx + i) % total;
+          const p = estado.jogadores[idx];
+          const div = document.createElement('div');
+          div.className = 'oponente' + (idx === estado.jogadorAtualIdx ? ' vez' : '');
+          div.textContent = p.nome + ': ' + p.cartas.length + ' carta(s)';
+          oponentesEl.appendChild(div);
+        }
+      }
+
+      function cartasJogaveis() {
+        const topo = estado.descarte[estado.descarte.length - 1];
+        const cor = estado.corAtual || topo.cor;
+        return estado.jogadores[0].cartas.filter(c => podeJogar(c, topo, cor));
+      }
+
+      function renderizarMao() {
+        const jogaveis = cartasJogaveis();
+        maoCartasEl.innerHTML = estado.jogadores[0].cartas.map((c, i) => {
+          const jogavel = jogaveis.some(x => x === c);
+          return '<div class="carta cor-' + c.cor + (jogavel ? ' jogavel' : ' nao-jogavel') + '" data-i="' + i + '">' + textoCarta(c) + '</div>';
+        }).join('');
+        maoCartasEl.querySelectorAll('.carta.jogavel').forEach(el => {
+          el.addEventListener('click', () => jogarCarta(parseInt(el.dataset.i, 10)));
+        });
+      }
+
+      function jogarCarta(idx) {
+        if (estado.jogadorAtualIdx !== 0) return;
+        const jogaveis = cartasJogaveis();
+        const carta = estado.jogadores[0].cartas[idx];
+        if (!jogaveis.some(c => c === carta)) return;
+        if (carta.selvagem) {
+          escolherCorEl.classList.add('ativo');
+          estado.cartaWildPendente = carta;
+          estado.indiceCartaPendente = idx;
+          return;
+        }
+        executarJogada(0, idx);
+      }
+
+      function executarJogada(jogadorIdx, indiceCarta, corEscolhida) {
+        const jogador = estado.jogadores[jogadorIdx];
+        const carta = jogador.cartas[indiceCarta];
+        jogador.cartas.splice(indiceCarta, 1);
+        estado.descarte.push(carta);
+
+        if (carta.selvagem) {
+          estado.corAtual = corEscolhida || CORES[Math.floor(Math.random() * 4)];
+        } else {
+          estado.corAtual = null;
+        }
+
+        const n = estado.jogadores.length;
+        let proximo = (estado.jogadorAtualIdx + estado.direcao + n) % n;
+
+        if (carta.tipo === 'skip') {
+          proximo = (proximo + estado.direcao + n) % n;
+        } else if (carta.tipo === 'reverse') {
+          estado.direcao *= -1;
+          proximo = (estado.jogadorAtualIdx + estado.direcao + n) % n;
+        } else if (carta.tipo === 'draw2') {
+          for (let k = 0; k < 2; k++) {
+            if (estado.monte.length) estado.jogadores[proximo].cartas.push(estado.monte.pop());
+          }
+          proximo = (proximo + estado.direcao + n) % n;
+        } else if (carta.tipo === 'wild4') {
+          for (let k = 0; k < 4; k++) {
+            if (estado.monte.length) estado.jogadores[proximo].cartas.push(estado.monte.pop());
+          }
+          proximo = (proximo + estado.direcao + n) % n;
+        }
+
+        estado.jogadorAtualIdx = proximo;
+        escolherCorEl.classList.remove('ativo');
+        estado.cartaWildPendente = null;
+
+        if (jogador.cartas.length === 0) {
+          fimJogo(jogadorIdx === 0 ? 'Você ganhou!' : jogador.nome + ' ganhou!');
+          return;
+        }
+
+        atualizarTopo();
+        atualizarOponentes();
+        if (jogadorIdx === 0) {
+          renderizarMao();
+          log('');
+        }
+
+        if (estado.jogadorAtualIdx === 0) {
+          infoTurno.textContent = 'Sua vez!';
+          btnComprar.disabled = false;
+          renderizarMao();
+        } else {
+          infoTurno.textContent = estado.jogadores[estado.jogadorAtualIdx].nome + ' está jogando...';
+          btnComprar.disabled = true;
+          setTimeout(() => turnoBot(), 800);
+        }
+      }
+
+      function turnoBot() {
+        const idx = estado.jogadorAtualIdx;
+        const bot = estado.jogadores[idx];
+        const topo = estado.descarte[estado.descarte.length - 1];
+        const cor = estado.corAtual || topo.cor;
+        const jogaveis = bot.cartas.map((c, i) => ({ c, i })).filter(({ c }) => podeJogar(c, topo, cor));
+
+        let escolha = null;
+        const dificil = estado.dificuldade === 'dificil';
+        const medio = estado.dificuldade === 'medio';
+
+        if (jogaveis.length > 0) {
+          if (estado.dificuldade === 'facil') {
+            escolha = jogaveis[Math.floor(Math.random() * jogaveis.length)];
+          } else {
+            const especiais = jogaveis.filter(({ c }) => ['skip','reverse','draw2','wild4'].includes(c.tipo));
+            const numeros = jogaveis.filter(({ c }) => !especiais.some(e => e.c === c));
+            if (dificil && especiais.length > 0) {
+              const menorMao = Math.min(...estado.jogadores.filter((_, i) => i !== idx).map(p => p.cartas.length));
+              if (menorMao <= 2) escolha = especiais[Math.floor(Math.random() * especiais.length)];
+            }
+            if (!escolha && medio && numeros.length > 0) {
+              const porCor = {};
+              numeros.forEach(({ c }) => { porCor[c.cor] = (porCor[c.cor] || 0) + 1; });
+              const melhorCor = Object.entries(porCor).sort((a, b) => b[1] - a[1])[0][0];
+              escolha = numeros.find(({ c }) => c.cor === melhorCor) || numeros[0];
+            }
+            if (!escolha) escolha = jogaveis[Math.floor(Math.random() * jogaveis.length)];
+          }
+        }
+
+        if (escolha) {
+          const carta = escolha.c;
+          let corEscolhida = null;
+          if (carta.selvagem) {
+            const coresNaMao = {};
+            bot.cartas.forEach(c => { if (c.cor !== 'p') coresNaMao[c.cor] = (coresNaMao[c.cor] || 0) + 1; });
+            const entradas = Object.entries(coresNaMao).sort((a, b) => b[1] - a[1]);
+            corEscolhida = entradas.length > 0 ? entradas[0][0] : CORES[Math.floor(Math.random() * 4)];
+          }
+          log(bot.nome + ' jogou ' + textoCarta(carta) + (corEscolhida ? ' (' + CORES_NOMES[corEscolhida] + ')' : ''));
+          executarJogada(idx, escolha.i, corEscolhida);
+        } else {
+          reporMonte();
+          if (estado.monte.length) {
+            bot.cartas.push(estado.monte.pop());
+            log(bot.nome + ' comprou uma carta.');
+          }
+          estado.jogadorAtualIdx = (idx + estado.direcao + estado.jogadores.length) % estado.jogadores.length;
+          atualizarOponentes();
+          if (estado.jogadorAtualIdx === 0) {
+            infoTurno.textContent = 'Sua vez!';
+            btnComprar.disabled = false;
+            renderizarMao();
+          } else {
+            infoTurno.textContent = estado.jogadores[estado.jogadorAtualIdx].nome + ' está jogando...';
+            setTimeout(() => turnoBot(), 600);
+          }
+        }
+      }
+
+      function reporMonte() {
+        if (estado.monte.length > 0) return;
+        const topo = estado.descarte.pop();
+        estado.monte = embaralhar(estado.descarte);
+        estado.descarte = [topo];
+      }
+
+      function comprarCarta() {
+        if (estado.jogadorAtualIdx !== 0) return;
+        reporMonte();
+        if (!estado.monte.length) return;
+        estado.jogadores[0].cartas.push(estado.monte.pop());
+        estado.jogadorAtualIdx = (estado.direcao + estado.jogadores.length) % estado.jogadores.length;
+        atualizarOponentes();
+        infoTurno.textContent = estado.jogadores[estado.jogadorAtualIdx].nome + ' está jogando...';
+        btnComprar.disabled = true;
+        renderizarMao();
+        log('Você comprou uma carta.');
+        setTimeout(() => turnoBot(), 600);
+      }
+
+      function fimJogo(msg) {
+        fimTitulo.textContent = msg.includes('ganhou') ? '🎉 Parabéns!' : 'Fim do jogo';
+        fimTexto.textContent = msg;
+        mensagemFim.classList.add('ativo');
+      }
+
+      escolherCorEl.querySelectorAll('.btn-cor').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (!estado || !estado.cartaWildPendente) return;
+          const cor = btn.dataset.cor;
+          const idx = estado.jogadores[0].cartas.indexOf(estado.cartaWildPendente);
+          if (idx === -1) return;
+          executarJogada(0, idx, cor);
+        });
+      });
+
+      btnComprar.addEventListener('click', comprarCarta);
+      monteComprar.addEventListener('click', comprarCarta);
+
+      btnNovaPartida.addEventListener('click', () => {
+        mensagemFim.classList.remove('ativo');
+        setup.style.display = 'block';
+        jogo.classList.remove('ativo');
+      });
+
+      btnIniciar.addEventListener('click', () => {
+        const numBots = parseInt(numBotsSelect.value, 10);
+        const dificuldade = dificuldadeSelect.value;
+        const baralho = embaralhar(criarBaralho());
+        const jogadores = [
+          { nome: 'Você', cartas: [] },
+          ...Array.from({ length: numBots }, (_, i) => ({ nome: 'Bot ' + (i + 1), cartas: [] }))
+        ];
+        for (let i = 0; i < 7; i++) {
+          jogadores.forEach(p => p.cartas.push(baralho.pop()));
+        }
+        let primeira = baralho.pop();
+        while (primeira.selvagem) {
+          baralho.unshift(primeira);
+          primeira = baralho.pop();
+        }
+        estado = {
+          monte: baralho,
+          descarte: [primeira],
+          jogadores,
+          jogadorAtualIdx: 0,
+          direcao: 1,
+          corAtual: null,
+          numBots,
+          dificuldade
+        };
+        setup.style.display = 'none';
+        jogo.classList.add('ativo');
+        atualizarTopo();
+        atualizarOponentes();
+        infoTurno.textContent = 'Sua vez!';
+        btnComprar.disabled = false;
+        renderizarMao();
+        escolherCorEl.classList.remove('ativo');
+        log('');
+      });
+    })();
+  </script>
+</body>
+</html>

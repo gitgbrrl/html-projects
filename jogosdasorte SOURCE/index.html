@@ -54,6 +54,95 @@
       text-align: center;
     }
 
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 16px 24px;
+    }
+
+    .btn-info {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface-2);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn-info:hover {
+      background: var(--accent);
+      color: var(--bg);
+      transform: scale(1.05);
+    }
+
+    .modal-info {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+      padding: 20px;
+    }
+    .modal-info.aberto {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-info .box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 28px;
+      max-width: 320px;
+      width: 100%;
+      box-shadow: var(--shadow);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+    .modal-info.aberto .box {
+      transform: scale(1);
+    }
+    .modal-info h3 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+    .modal-info p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-align: left;
+    }
+    .modal-info .btn-fechar {
+      width: 100%;
+      margin-top: 20px;
+      padding: 10px;
+      font-weight: 600;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .modal-info .btn-fechar:hover {
+      background: #fbbf24;
+    }
+
     h1 {
       font-family: 'Fredoka', sans-serif;
       font-size: clamp(2rem, 6vw, 3rem);
@@ -119,6 +208,19 @@
   </style>
 </head>
 <body>
+  <header>
+    <button type="button" class="btn-info" id="btn-info" title="Informações" aria-label="Informações do projeto">ℹ️</button>
+  </header>
+
+  <div class="modal-info" id="modal-info">
+    <div class="box">
+      <h3>ℹ️ Informações</h3>
+      <p><strong>Versão:</strong> 0.1.1</p>
+      <p><strong>Início do projeto:</strong> 12/02/2026</p>
+      <button type="button" class="btn-fechar" id="btn-fechar-info">Fechar</button>
+    </div>
+  </div>
+
   <div class="container">
     <h1>🎲 Jogos da Sorte</h1>
     <p class="subtitle">Escolha um jogo e divirta-se!</p>
@@ -141,7 +243,36 @@
         <h2>Roleta da Sorte</h2>
         <p>Adicione nomes, gire a roleta e sorteie alguém. Opção de remover o sorteado e preferências de giro.</p>
       </a>
+
+      <a href="slotsmachine.html" class="jogo-card">
+        <span class="icone">🎰</span>
+        <h2>Slots Machine</h2>
+        <p>Caça-níquel estilo cassino. Gire os três rolos e tente alinhar cereja, 7, diamante e mais na linha!</p>
+      </a>
+
+      <a href="uno.html" class="jogo-card">
+        <span class="icone">🃏</span>
+        <h2>Uno</h2>
+        <p>Jogo de cartas estilo Uno. Escolha quantos bots (1 a 3) e a dificuldade. Jogue contra a máquina!</p>
+      </a>
     </div>
   </div>
+
+  <script>
+    (function () {
+      var btnInfo = document.getElementById('btn-info');
+      var modalInfo = document.getElementById('modal-info');
+      var btnFechar = document.getElementById('btn-fechar-info');
+      btnInfo.addEventListener('click', function () {
+        modalInfo.classList.add('aberto');
+      });
+      btnFechar.addEventListener('click', function () {
+        modalInfo.classList.remove('aberto');
+      });
+      modalInfo.addEventListener('click', function (e) {
+        if (e.target === modalInfo) modalInfo.classList.remove('aberto');
+      });
+    })();
+  </script>
 </body>
 </html>
