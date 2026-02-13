@@ -99,6 +99,26 @@
       box-shadow: var(--shadow);
       margin-bottom: 24px;
       border: 3px solid var(--accent);
+      position: relative;
+    }
+
+    /* Botão secreto: canto superior direito da máquina, quase invisível */
+    .btn-secreto {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      opacity: 0.04;
+      border-radius: 4px;
+      transition: opacity 0.2s;
+    }
+    .btn-secreto:hover {
+      opacity: 0.15;
     }
 
     .machine-title {
@@ -199,6 +219,7 @@
     </header>
 
     <section class="machine">
+      <button type="button" class="btn-secreto" id="btn-secreto" title=""></button>
       <p class="machine-title">Aline os símbolos na linha e boa sorte!</p>
       <div class="reels-wrap">
         <div class="reel" id="reel1"><span class="symbol" id="sym1">🍒</span></div>
@@ -222,42 +243,70 @@
       const sym3 = document.getElementById('sym3');
       const resultadoMsg = document.getElementById('resultado-msg');
       const btnGirar = document.getElementById('btn-girar');
+      const btnSecreto = document.getElementById('btn-secreto');
 
       let girando = false;
+      let proximaGanha = false;
 
       function randomSymbol() {
         return SIMBOLOS[Math.floor(Math.random() * SIMBOLOS.length)];
       }
 
-      function girarReel(reelEl, symEl, delay, finalSymbol) {
-        return new Promise((resolve) => {
+      function getAudioContext() {
+        try {
+          return new (window.AudioContext || window.webkitAudioContext)();
+        } catch (_) { return null; }
+      }
+
+      function playTone(freq, duration, gainVal) {
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        try {
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = freq;
+          osc.type = 'sine';
+          gain.gain.setValueAtTime(gainVal || 0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + duration);
+        } catch (_) {}
+      }
+
+      function playSpinStart() {
+        playTone(400, 0.08, 0.12);
+      }
+
+      function playReelStop() {
+        playTone(600, 0.06, 0.1);
+      }
+
+      function playWin() {
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        try {
+          playTone(523, 0.12, 0.12);
+          setTimeout(function () { playTone(659, 0.12, 0.12); }, 120);
+          setTimeout(function () { playTone(784, 0.2, 0.14); }, 240);
+        } catch (_) {}
+      }
+
+      function girarReelComSom(reelEl, symEl, delay, finalSymbol, tocarSom) {
+        return new Promise(function (resolve) {
           reelEl.classList.add('girando');
-          const interval = setInterval(() => {
+          var interval = setInterval(function () {
             symEl.textContent = randomSymbol();
           }, 80);
-          setTimeout(() => {
+          setTimeout(function () {
             clearInterval(interval);
             symEl.textContent = finalSymbol;
             reelEl.classList.remove('girando');
+            if (tocarSom) playReelStop();
             resolve();
           }, delay);
         });
-      }
-
-      function playBeep() {
-        try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.frequency.value = 523;
-          osc.type = 'sine';
-          gain.gain.setValueAtTime(0.12, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-          osc.start(ctx.currentTime);
-          osc.stop(ctx.currentTime + 0.15);
-        } catch (_) {}
       }
 
       async function girar() {
@@ -267,25 +316,33 @@
         resultadoMsg.textContent = '...';
         resultadoMsg.classList.remove('ganhou');
 
-        const s1 = randomSymbol();
-        const s2 = randomSymbol();
-        const s3 = randomSymbol();
+        playSpinStart();
 
-        const t1 = 800;
-        const t2 = 1200;
-        const t3 = 1600;
+        var s1, s2, s3;
+        if (proximaGanha) {
+          s1 = s2 = s3 = randomSymbol();
+          proximaGanha = false;
+        } else {
+          s1 = randomSymbol();
+          s2 = randomSymbol();
+          s3 = randomSymbol();
+        }
+
+        var t1 = 800;
+        var t2 = 1200;
+        var t3 = 1600;
 
         await Promise.all([
-          girarReel(reel1, sym1, t1, s1),
-          girarReel(reel2, sym2, t2, s2),
-          girarReel(reel3, sym3, t3, s3)
+          girarReelComSom(reel1, sym1, t1, s1, true),
+          girarReelComSom(reel2, sym2, t2, s2, true),
+          girarReelComSom(reel3, sym3, t3, s3, true)
         ]);
 
-        const ganhou = s1 === s2 && s2 === s3;
+        var ganhou = s1 === s2 && s2 === s3;
         if (ganhou) {
           resultadoMsg.textContent = '🎉 Linha! Você ganhou! 🎉';
           resultadoMsg.classList.add('ganhou');
-          playBeep();
+          playWin();
         } else {
           resultadoMsg.textContent = 'Tente novamente!';
         }
@@ -295,6 +352,10 @@
       }
 
       btnGirar.addEventListener('click', girar);
+
+      btnSecreto.addEventListener('click', function () {
+        proximaGanha = true;
+      });
     })();
   </script>
 </body>
