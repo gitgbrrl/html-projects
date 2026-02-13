@@ -266,6 +266,25 @@
       flex: 0 1 340px;
       min-width: 0;
     }
+    /* No celular: sorteio em cima e tudo centralizado */
+    @media (max-width: 899px) {
+      header {
+        justify-content: center;
+      }
+      .main-layout {
+        flex-direction: column;
+        align-items: center;
+      }
+      .main-layout .sorteio-section {
+        order: -1;
+      }
+      .main-layout .tabela-section,
+      .main-layout .sorteio-section {
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
     @media (min-width: 900px) {
       .main-layout .tabela-section { flex: 1 1 55%; }
       .main-layout .sorteio-section { flex: 0 1 380px; }
