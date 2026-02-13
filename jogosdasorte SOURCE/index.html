@@ -2,277 +2,284 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <title>Meus Projetos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jogos da Sorte</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg: #0f172a;
-      --surface: #1e293b;
-      --surface-2: #334155;
-      --accent: #f59e0b;
-      --accent-hover: #fbbf24;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --radius: 16px;
-      --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      --bg-body: #f8fafc;
+      --bg-card: rgba(255, 255, 255, 0.4);
+      --card-border: rgba(255, 255, 255, 0.7);
+      --text-main: #0f172a;
+      --text-sub: #475569;
+      --shadow: rgba(0, 0, 0, 0.05);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    [data-theme="dark"] {
+      --bg-body: #020617;
+      --bg-card: rgba(15, 23, 42, 0.3);
+      --card-border: rgba(255, 255, 255, 0.15);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --shadow: rgba(0, 0, 0, 0.4);
     }
+
+    * { box-sizing: border-box; transition: background 0.5s ease, color 0.3s ease; }
 
     body {
-      font-family: 'Outfit', sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
       min-height: 100vh;
       overflow-x: hidden;
     }
 
-    body::before {
-      content: '';
+    .bg-container {
       position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245, 158, 11, 0.12), transparent),
-        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(168, 85, 247, 0.08), transparent);
-      pointer-events: none;
-      z-index: 0;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+      overflow: hidden;
     }
 
-    .container {
-      position: relative;
-      z-index: 1;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 48px 24px 60px;
-      text-align: center;
-    }
-
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 16px 24px;
-    }
-
-    .btn-info {
-      width: 44px;
-      height: 44px;
+    .sphere {
+      position: absolute;
+      width: 450px;
+      height: 450px;
       border-radius: 50%;
-      border: none;
-      background: var(--surface-2);
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      transition: background 0.2s, transform 0.2s;
-    }
-    .btn-info:hover {
-      background: var(--accent);
-      color: var(--bg);
-      transform: scale(1.05);
+      filter: blur(80px);
+      opacity: 0.5;
+      animation: float 20s infinite alternate ease-in-out, colorShift 15s infinite alternate;
     }
 
-    .modal-info {
+    .sphere-1 {
+      background: #3b82f6;
+      top: 10%; left: 15%;
+      animation-duration: 25s, 12s;
+    }
+
+    .sphere-2 {
+      background: #ec4899;
+      bottom: 15%; right: 10%;
+      animation-duration: 30s, 18s;
+      animation-delay: -5s;
+    }
+
+    .sphere-3 {
+      background: #10b981;
+      top: 40%; left: 50%;
+      animation-duration: 22s, 15s;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(100px, 50px) scale(1.1); }
+      100% { transform: translate(-50px, 150px) scale(0.9); }
+    }
+
+    @keyframes colorShift {
+      0% { filter: blur(80px) hue-rotate(0deg); }
+      100% { filter: blur(80px) hue-rotate(180deg); }
+    }
+
+    header { padding: 100px 20px 60px; text-align: center; }
+    header h1 { font-size: 3rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
+
+    main { width: 90%; max-width: 1100px; margin: 0 auto; padding-bottom: 80px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+
+    .glass {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 10px 30px var(--shadow);
+      border-radius: 24px;
+      padding: 50px 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                  background 0.3s ease, 
+                  box-shadow 0.3s ease;
+    }
+
+    .glass:hover {
+      transform: scale(1.05);
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] .glass:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .glass h2 { margin: 0 0 10px; font-size: 1.5rem; }
+    .glass p { font-size: 1rem; color: var(--text-sub); margin: 0; }
+
+    .theme-toggle {
+      position: fixed;
+      top: 30px; right: 30px;
+      padding: 12px 20px;
+      font-weight: 600;
+      z-index: 1000;
+      color: var(--text-main);
+    }
+
+    .info-toggle {
+      position: fixed;
+      top: 30px; left: 30px;
+      padding: 12px 20px;
+      font-weight: 600;
+      z-index: 1000;
+      color: var(--text-main);
+    }
+
+    .info-overlay {
+      display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1001;
       align-items: center;
       justify-content: center;
-      z-index: 100;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s, visibility 0.3s;
       padding: 20px;
     }
-    .modal-info.aberto {
-      opacity: 1;
-      visibility: visible;
+    .info-overlay.ativo { display: flex; }
+
+    .info-modal {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 20px 60px var(--shadow);
+      border-radius: 24px;
+      padding: 32px 40px;
+      max-width: 360px;
+      color: var(--text-main);
     }
-    .modal-info .box {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 28px;
-      max-width: 320px;
-      width: 100%;
-      box-shadow: var(--shadow);
-      transform: scale(0.9);
-      transition: transform 0.3s ease;
-    }
-    .modal-info.aberto .box {
-      transform: scale(1);
-    }
-    .modal-info h3 {
-      font-family: 'Fredoka', sans-serif;
-      font-size: 1.25rem;
-      margin-bottom: 16px;
-      color: var(--accent);
-    }
-    .modal-info p {
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      text-align: left;
-    }
-    .modal-info .btn-fechar {
-      width: 100%;
+    .info-modal h3 { margin: 0 0 16px; font-size: 1.25rem; }
+    .info-modal p { margin: 0 0 8px; color: var(--text-sub); font-size: 0.95rem; }
+    .info-modal .fechar {
       margin-top: 20px;
-      padding: 10px;
+      padding: 10px 24px;
       font-weight: 600;
-      background: var(--accent);
-      color: var(--bg);
-      border: none;
-      border-radius: 8px;
       cursor: pointer;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      background: var(--bg-card);
+      color: var(--text-main);
     }
-    .modal-info .btn-fechar:hover {
-      background: #fbbf24;
-    }
+    .info-modal .fechar:hover { opacity: 0.9; }
 
-    h1 {
-      font-family: 'Fredoka', sans-serif;
-      font-size: clamp(2rem, 6vw, 3rem);
-      font-weight: 700;
-      margin-bottom: 12px;
-      background: linear-gradient(135deg, var(--accent), #fbbf24);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .subtitle {
-      font-size: 1.1rem;
-      color: var(--text-muted);
-      margin-bottom: 48px;
-    }
-
-    .jogos {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 24px;
-      justify-items: center;
-    }
-
-    .jogo-card {
-      display: block;
-      width: 100%;
-      max-width: 320px;
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 32px 24px;
-      text-decoration: none;
-      color: inherit;
-      border: 2px solid transparent;
-      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-      text-align: center;
-    }
-
-    .jogo-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow);
-      border-color: var(--accent);
-    }
-
-    .jogo-card .icone {
-      font-size: 4rem;
-      margin-bottom: 16px;
-      line-height: 1;
-    }
-
-    .jogo-card h2 {
-      font-family: 'Fredoka', sans-serif;
-      font-size: 1.5rem;
-      margin-bottom: 8px;
-      color: var(--text);
-    }
-
-    .jogo-card p {
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      line-height: 1.4;
-    }
+    footer { padding: 40px; text-align: center; color: var(--text-sub); font-size: 0.9rem; }
   </style>
+  <script>
+    // Aplica modo escuro antes de pintar a página (evita flash de modo claro)
+    if (localStorage.getItem('theme') !== 'light') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
 </head>
 <body>
+
+  <div class="bg-container">
+    <div class="sphere sphere-1"></div>
+    <div class="sphere sphere-2"></div>
+    <div class="sphere sphere-3"></div>
+  </div>
+
+  <button class="info-toggle glass" onclick="abrirInfo()">ℹ️ Informações</button>
+  <button class="theme-toggle glass" id="themeBtn" onclick="toggleTheme()">🌙 Modo Escuro</button>
+
+  <div class="info-overlay" id="infoOverlay" onclick="fecharInfoClick(event)">
+    <div class="info-modal glass" onclick="event.stopPropagation()">
+      <h3>ℹ️ Sobre o projeto</h3>
+      <p><strong>Versão:</strong> Beta 0.1.1</p>
+      <p><strong>Início do projeto:</strong> 21/12/2025</p>
+      <button class="fechar" onclick="fecharInfo()">Fechar</button>
+    </div>
+  </div>
+
   <header>
-    <button type="button" class="btn-info" id="btn-info" title="Informações" aria-label="Informações do projeto">ℹ️</button>
+    <h1>Meus Projetos</h1>
+    <p>Experimentos em HTML</p>
   </header>
 
-  <div class="modal-info" id="modal-info">
-    <div class="box">
-      <h3>ℹ️ Informações</h3>
-      <p><strong>Versão:</strong> 0.1.1</p>
-      <p><strong>Início do projeto:</strong> 12/02/2026</p>
-      <button type="button" class="btn-fechar" id="btn-fechar-info">Fechar</button>
+  <main>
+    <div class="grid">
+      <div class="glass" onclick="abrirProjeto('block.html')">
+        <h2>Block Blast</h2>
+        <p>Efeitos de neon e glow</p>
+      </div>
+
+      <div class="glass" onclick="abrirProjeto('tetris.html')">
+        <h2>Tetris</h2>
+        <p>A experiência clássica</p>
+      </div>
+
+      <div class="glass" onclick="abrirProjeto('2048.html')">
+        <h2>2048</h2>
+        <p>Deslize e combine</p>
+      </div>
+
+      <div class="glass" onclick="abrirProjeto('dino.html')">
+        <h2>Cyber Dino</h2>
+        <p>O dinossauro evoluído</p>
+      </div>
+
+      <div class="glass" onclick="abrirProjeto('idle.html')">
+        <h2>Idle Planet</h2>
+        <p>Clique no planeta e compre upgrades</p>
+      </div>
     </div>
-  </div>
+  </main>
 
-  <div class="container">
-    <h1>🎲 Jogos da Sorte</h1>
-    <p class="subtitle">Escolha um jogo e divirta-se!</p>
-
-    <div class="jogos">
-      <a href="bingo.html" class="jogo-card">
-        <span class="icone">🎱</span>
-        <h2>Bingo</h2>
-        <p>Sorteador de números para bingo. Tabela BINGO, últimos números e configurações para 75 ou 90 bolas.</p>
-      </a>
-
-      <a href="rolardados.html" class="jogo-card">
-        <span class="icone">🎲</span>
-        <h2>Rolar Dados</h2>
-        <p>Gire dados virtuais. Vários dados, vários lados (d6, d20, etc.) e animações divertidas.</p>
-      </a>
-
-      <a href="roleta.html" class="jogo-card">
-        <span class="icone">🎡</span>
-        <h2>Roleta da Sorte</h2>
-        <p>Adicione nomes, gire a roleta e sorteie alguém. Opção de remover o sorteado e preferências de giro.</p>
-      </a>
-
-      <a href="slotsmachine.html" class="jogo-card">
-        <span class="icone">🎰</span>
-        <h2>Slots Machine</h2>
-        <p>Caça-níquel estilo cassino. Gire os três rolos e tente alinhar cereja, 7, diamante e mais na linha!</p>
-      </a>
-
-      <a href="uno.html" class="jogo-card">
-        <span class="icone">🃏</span>
-        <h2>Uno</h2>
-        <p>Jogo de cartas estilo Uno. Escolha quantos bots (1 a 3) e a dificuldade. Jogue contra a máquina!</p>
-      </a>
-    </div>
-  </div>
+  <footer>
+    <p>&copy; 2026 - Gabriel</p>
+  </footer>
 
   <script>
-    (function () {
-      var btnInfo = document.getElementById('btn-info');
-      var modalInfo = document.getElementById('modal-info');
-      var btnFechar = document.getElementById('btn-fechar-info');
-      btnInfo.addEventListener('click', function () {
-        modalInfo.classList.add('aberto');
-      });
-      btnFechar.addEventListener('click', function () {
-        modalInfo.classList.remove('aberto');
-      });
-      modalInfo.addEventListener('click', function (e) {
-        if (e.target === modalInfo) modalInfo.classList.remove('aberto');
-      });
-    })();
+    function abrirInfo() {
+      document.getElementById('infoOverlay').classList.add('ativo');
+    }
+    function fecharInfo() {
+      document.getElementById('infoOverlay').classList.remove('ativo');
+    }
+    function fecharInfoClick(ev) {
+      if (ev.target.id === 'infoOverlay') fecharInfo();
+    }
+
+    function abrirProjeto(nomeDoArquivo) {
+      // Alterado: agora abre na mesma aba
+      window.location.href = nomeDoArquivo;
+    }
+
+    const themeBtn = document.getElementById('themeBtn');
+    
+    // Padrão: modo escuro. Só mostra claro se o usuário salvou 'light'
+    if (localStorage.getItem('theme') !== 'light') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeBtn.innerHTML = '☀️ Modo Claro';
+    }
+
+    function toggleTheme() {
+      let theme = document.documentElement.getAttribute('data-theme');
+      if (theme === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+        themeBtn.innerHTML = '🌙 Modo Escuro';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        themeBtn.innerHTML = '☀️ Modo Claro';
+      }
+    }
   </script>
 </body>
 </html>
