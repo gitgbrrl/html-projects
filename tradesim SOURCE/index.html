@@ -688,7 +688,8 @@
       let isTrading = false;
       let currentTrade = null;
       let easterEgg67Triggered = false;
-      let easterEggIsaTriggered = false;
+      const SECRET_CODES = { isa: 45000, globalsi: 2800, alexandre: 1981 };
+      const secretCodesUsed = { isa: false, globalsi: false, alexandre: false };
 
       const balanceEl = document.getElementById('balance');
       const assetListEl = document.getElementById('assetList');
@@ -958,18 +959,21 @@
 
       function checkSecret() {
         const text = (secretInput.value || '').trim().toLowerCase();
-        if (text === 'isa') {
-          if (easterEggIsaTriggered) {
+        const amount = SECRET_CODES[text];
+        if (amount !== undefined) {
+          if (secretCodesUsed[text]) {
             secretMsg.textContent = 'Este código já foi usado nesta sessão.';
+            secretMsg.style.color = 'var(--red)';
             return;
           }
-          easterEggIsaTriggered = true;
-          balance += 45000;
+          secretCodesUsed[text] = true;
+          balance += amount;
           saveBalance();
           updateBalanceDisplay();
-          secretMsg.textContent = '🎉 +R$ 45.000,00!';
+          const valueStr = 'R$ ' + amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          secretMsg.textContent = '🎉 +' + valueStr + '!';
           secretMsg.style.color = 'var(--green)';
-          setStatus('🎉 +R$ 45.000,00!', 'won');
+          setStatus('🎉 +' + valueStr + '!', 'won');
           setTimeout(() => setStatus(''), 5000);
           setTimeout(closeSecretModal, 1500);
         } else if (text) {
