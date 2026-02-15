@@ -302,6 +302,27 @@
       cursor: not-allowed;
     }
 
+    .opcao-remover-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 24px;
+      padding: 14px 20px;
+      background: var(--surface-2);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 320px;
+    }
+    .opcao-remover-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .opcao-remover-wrap .toggle {
+      flex-shrink: 0;
+    }
+
     /* Modal config */
     .modal-overlay {
       position: fixed;
@@ -428,6 +449,10 @@
       </div>
       <div class="resultado vazio" id="resultado">Quem será sorteado?</div>
       <button type="button" class="btn-girar" id="btn-girar">Girar!</button>
+      <div class="opcao-remover-wrap">
+        <span class="opcao-remover-label">Remover sorteado da lista</span>
+        <div class="toggle" id="toggle-remover" role="switch" aria-checked="false" title="Quando ativo, o nome sorteado é removido da roleta"></div>
+      </div>
     </section>
   </div>
 
@@ -445,10 +470,6 @@
       <div class="toggle-row">
         <span>Som ao parar</span>
         <div class="toggle ativo" id="toggle-som" role="switch" aria-checked="true"></div>
-      </div>
-      <div class="toggle-row">
-        <span>Remover sorteado da lista</span>
-        <div class="toggle" id="toggle-remover" role="switch" aria-checked="false"></div>
       </div>
       <button type="button" class="btn-fechar" id="btn-fechar-config">Fechar</button>
     </div>
